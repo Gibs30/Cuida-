@@ -6,7 +6,6 @@ import {
   Trash2, X, Activity, Edit2, Share2, Moon, Sun, Flame,
   Music, User, Camera, MessageCircle, Send, Info, Mic, Printer
 } from 'lucide-react';
-import './App.css'; // Carrega os nossos estilos semânticos customizados
 
 // --- CONEXÃO REAL COM O SUPABASE ---
 import { createClient } from '@supabase/supabase-js';
