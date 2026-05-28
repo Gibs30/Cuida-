@@ -110,6 +110,12 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', profile.theme);
     document.documentElement.setAttribute('data-dark', isDark.toString());
     document.documentElement.setAttribute('data-easy', profile.easyMode.toString());
+    // Fix Dark Mode functionality - sync with document element
+    if (profile.darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   }, [profile, isDark]);
 
   // --- ACESSIBILIDADE, ÁUDIO E VOZ ---
@@ -537,6 +543,17 @@ export default function App() {
     Brain: "Ex: Leitura diária"
   };
 
+  const openEdit = (reminder) => {
+    setEditingId(reminder.id);
+    setNewRemTitle(reminder.title);
+    setNewRemDetail(reminder.detail || '');
+    setNewRemTime(reminder.time);
+    setNewRemType(reminder.type || 'Pill');
+    setNewRemDays(reminder.days || []);
+    setNewRemStock(reminder.stock ? reminder.stock.toString() : '');
+    setCurrentView('add');
+  };
+
   const deleteReminder = async (id) => {
     try {
       const { error } = await supabase.from('reminders').delete().eq('id', id);
@@ -818,8 +835,8 @@ export default function App() {
   // --- ELEMENTOS DE RENDER DO TEMPLATE ---
 
   const renderOnboarding = () => (
-    <div className="app-container flex items-center justify-center">
-      <div className="card-cuida max-w-md w-full text-center">
+    <div className="app-container flex items-center justify-center w-full px-4">
+      <div className="card-cuida w-full max-w-md text-center">
         <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary-light text-primary mb-4">
           <Heart size={64} className="animate-pulse" />
         </div>
@@ -854,7 +871,12 @@ export default function App() {
 
         <button 
           onClick={() => saveProfile(onboardingName, onboardingPhone, onboardingRole)}
-          className="btn-cuida btn-primary mt-4"
+          disabled={!onboardingName || !onboardingName.trim()}
+          className={`btn-cuida btn-primary mt-4 ${
+            !onboardingName || !onboardingName.trim() 
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
+              : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+          }`}
         >
           Entrar na conta
         </button>
@@ -863,8 +885,8 @@ export default function App() {
   );
 
   const renderEditProfile = () => (
-    <div className="app-container">
-      <div className="max-width-wrapper">
+    <div className="app-container w-full px-4 sm:px-6 md:px-8">
+      <div className="max-w-2xl mx-auto">
         <div className="flex-between" style={{ marginBottom: '32px' }}>
           <div className="flex-gap">
             <button onClick={() => setCurrentView('settings')} className="scroll-btn" style={{ padding: '12px' }}><ArrowLeft size={24} /></button>
@@ -872,7 +894,7 @@ export default function App() {
           </div>
         </div>
 
-        <div className="card-cuida" style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div className="card-cuida w-full">
           <div className="form-field">
             <label>Nome Completo / Alcunha</label>
             <input 
@@ -901,14 +923,14 @@ export default function App() {
   );
 
   const renderPatientHome = () => (
-    <div className="app-container">
-      <div className="max-width-wrapper">
+    <div className="app-container w-full px-4 sm:px-6 md:px-8">
+      <div className="max-w-6xl mx-auto">
         
         {/* Cabeçalho */}
-        <div className="flex-between mb-8">
+        <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-5xl font-bold mb-1">Olá, {profile.name} 🌷</h1>
-            <p className="text-text-muted text-lg">O que vamos fazer hoje?</p>
+            <h1 className={`font-bold mb-1 ${profile.easyMode ? 'text-5xl md:text-6xl' : 'text-4xl md:text-5xl'}`}>Olá, {profile.name} 🌷</h1>
+            <p className={`text-text-muted ${profile.easyMode ? 'text-xl' : 'text-lg'}`}>O que vamos fazer hoje?</p>
           </div>
           
           <button 
@@ -917,9 +939,10 @@ export default function App() {
               updateProfile({ easyMode: newMode });
               speak(newMode ? "Modo fácil ativado." : "Modo fácil desativado.");
             }}
-            className={`scroll-btn p-4 ${profile.easyMode ? 'active' : ''}`}
+            className={`scroll-btn ${profile.easyMode ? 'p-6' : 'p-4'} ${profile.easyMode ? 'active' : ''}`}
+            onMouseEnter={() => falarTexto(profile.easyMode ? "Desativar modo fácil" : "Ativar modo fácil")}
           >
-            <Volume2 size={24} />
+            <Volume2 size={profile.easyMode ? 32 : 24} />
           </button>
         </div>
 
@@ -933,49 +956,51 @@ export default function App() {
         </div>
 
         {/* Menu Grid */}
-        <div className="grid-cards">
-          <button onClick={() => { setEditingId(null); setCurrentView('add'); }} className="menu-btn">
-            <div className="menu-btn-icon-wrapper"><Plus size={32} /></div>
-            <span className="font-bold">Novo Aviso</span>
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 ${profile.easyMode ? 'gap-6' : ''}`}>
+          <button onClick={() => { setEditingId(null); setCurrentView('add'); }} className={`menu-btn flex flex-col items-center justify-center ${profile.easyMode ? 'py-8 px-6' : 'py-6 px-4'}`} onMouseEnter={() => falarTexto("Novo Aviso")}>
+            <div className={`menu-btn-icon-wrapper mb-2 ${profile.easyMode ? 'text-5xl' : ''}`}><Plus size={profile.easyMode ? 40 : 32} /></div>
+            <span className={`font-bold text-center ${profile.easyMode ? 'text-lg' : ''}`}>Novo Aviso</span>
           </button>
 
-          <button onClick={() => setCurrentView('schedule')} className="menu-btn">
-            <div className="menu-btn-icon-wrapper"><ClipboardList size={32} /></div>
-            <span className="font-bold">Meus Horários</span>
+          <button onClick={() => setCurrentView('schedule')} className={`menu-btn flex flex-col items-center justify-center ${profile.easyMode ? 'py-8 px-6' : 'py-6 px-4'}`} onMouseEnter={() => falarTexto("Meus Horários")}>
+            <div className={`menu-btn-icon-wrapper mb-2 ${profile.easyMode ? 'text-5xl' : ''}`}><ClipboardList size={profile.easyMode ? 40 : 32} /></div>
+            <span className={`font-bold text-center ${profile.easyMode ? 'text-lg' : ''}`}>Meus Horários</span>
           </button>
 
-          <button onClick={() => setCurrentView('family')} className="menu-btn">
-            <div className="menu-btn-icon-wrapper"><Users size={32} /></div>
-            <span className="font-bold">Família & Histórico</span>
+          <button onClick={() => setCurrentView('family')} className={`menu-btn flex flex-col items-center justify-center ${profile.easyMode ? 'py-8 px-6' : 'py-6 px-4'}`} onMouseEnter={() => falarTexto("Família e Histórico")}>
+            <div className={`menu-btn-icon-wrapper mb-2 ${profile.easyMode ? 'text-5xl' : ''}`}><Users size={profile.easyMode ? 40 : 32} /></div>
+            <span className={`font-bold text-center ${profile.easyMode ? 'text-lg' : ''}`}>Família & Histórico</span>
           </button>
 
-          <button onClick={() => setCurrentView('settings')} className="menu-btn">
-            <div className="menu-btn-icon-wrapper"><Settings size={32} /></div>
-            <span className="font-bold">Ajustes</span>
+          <button onClick={() => setCurrentView('settings')} className={`menu-btn flex flex-col items-center justify-center ${profile.easyMode ? 'py-8 px-6' : 'py-6 px-4'}`} onMouseEnter={() => falarTexto("Ajustes")}>
+            <div className={`menu-btn-icon-wrapper mb-2 ${profile.easyMode ? 'text-5xl' : ''}`}><Settings size={profile.easyMode ? 40 : 32} /></div>
+            <span className={`font-bold text-center ${profile.easyMode ? 'text-lg' : ''}`}>Ajustes</span>
           </button>
         </div>
 
         {/* Widgets IA & Chat */}
-        <div className="grid-two-columns">
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${profile.easyMode ? 'gap-6' : ''}`}>
           <button 
             onClick={() => setCurrentView('aiAssistant')}
-            className="btn-cuida bg-gradient-to-r from-purple to-indigo-500 text-white p-8 text-left justify-start"
+            className={`btn-cuida bg-gradient-to-r from-purple to-indigo-500 text-white text-left justify-start flex flex-col sm:flex-row items-start sm:items-center gap-4 ${profile.easyMode ? 'p-8' : 'p-6'}`}
+            onMouseEnter={() => falarTexto("Assistente de Saúde. Dicas de organização, remédios e saúde geral.")}
           >
-            <Sparkles size={36} />
+            <Sparkles size={profile.easyMode ? 48 : 36} className="flex-shrink-0" />
             <div>
-              <strong className="text-xl block">Assistente de Saúde ✨</strong>
-              <span className="opacity-90 font-normal">Dicas de organização, remédios e saúde geral.</span>
+              <strong className={`block ${profile.easyMode ? 'text-2xl' : 'text-xl'}`}>Assistente de Saúde ✨</strong>
+              <span className={`opacity-90 font-normal ${profile.easyMode ? 'text-lg' : ''}`}>Dicas de organização, remédios e saúde geral.</span>
             </div>
           </button>
 
           <button 
             onClick={() => setCurrentView('chat')}
-            className="btn-cuida btn-secondary p-8 text-left justify-start border-2 border-gray-300"
+            className={`btn-cuida btn-secondary text-left justify-start flex flex-col sm:flex-row items-start sm:items-center gap-4 border-2 border-gray-300 ${profile.easyMode ? 'p-8' : 'p-6'}`}
+            onMouseEnter={() => falarTexto("Mensagens. Conversar com o familiar cuidador.")}
           >
-            <MessageCircle size={36} className="text-primary" />
+            <MessageCircle size={profile.easyMode ? 48 : 36} className="text-primary flex-shrink-0" />
             <div>
-              <strong className="text-xl block">Mensagens 💬</strong>
-              <span className="text-text-muted font-normal">Conversar com o familiar cuidador.</span>
+              <strong className={`block ${profile.easyMode ? 'text-2xl' : 'text-xl'}`}>Mensagens 💬</strong>
+              <span className={`text-text-muted font-normal ${profile.easyMode ? 'text-lg' : ''}`}>Conversar com o familiar cuidador.</span>
             </div>
           </button>
         </div>
@@ -1012,8 +1037,8 @@ export default function App() {
     const progressPerc = todayReminders.length > 0 ? Math.round((todayLogs.length / todayReminders.length) * 100) : 100;
 
     return (
-      <div className="app-container">
-        <div className="max-width-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div className="app-container w-full px-4 sm:px-6 md:px-8">
+        <div className="max-w-4xl mx-auto" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
           {/* Alerta de Falta de Movimento */}
           {isPatientInactive && (
@@ -1035,7 +1060,7 @@ export default function App() {
             <button onClick={() => updateProfile({ linkedPatientId: '' })} className="scroll-btn" style={{ color: 'var(--danger)' }}>Desvincular</button>
           </div>
 
-          <div className="grid-two-columns">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="card-cuida">
               <h2 style={{ marginBottom: '16px' }}>Progresso Diário do Paciente</h2>
               
@@ -1112,8 +1137,8 @@ export default function App() {
     };
 
     return (
-      <div className="app-container">
-        <div className="max-width-wrapper">
+      <div className="app-container w-full px-4 sm:px-6 md:px-8">
+        <div className="max-w-2xl mx-auto">
           <div className="flex-gap mb-8">
             <button onClick={closeAddReminder} className="scroll-btn p-3"><ArrowLeft size={24} /></button>
             <h1 className="text-3xl font-bold">{editingId ? 'Editar Aviso' : 'Novo Lembrete'}</h1>
@@ -1158,21 +1183,23 @@ export default function App() {
               </div>
             )}
 
-            <div className="flex gap-4 flex-wrap">
+            <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
               <div className="form-field flex-1">
                 <label className="font-bold">Instrução (opcional)</label>
                 <input 
-                  type="text" className="input-cuida" placeholder="Ex: Tomar após a refeição"
+                  type="text" className={`input-cuida ${profile.easyMode ? 'text-lg py-3' : ''}`} placeholder="Ex: Tomar após a refeição"
                   value={newRemDetail} onChange={e => setNewRemDetail(e.target.value)}
+                  onMouseEnter={() => falarTexto("Instrições opcionais, como tomar o medicamento")}
                 />
               </div>
 
               {newRemType === 'Pill' && (
-                <div className="form-field w-40">
+                <div className="form-field w-full sm:w-40">
                   <label className="font-bold">Em Stock</label>
                   <input 
-                    type="number" className="input-cuida" placeholder="30"
+                    type="number" className={`input-cuida ${profile.easyMode ? 'text-lg py-3' : ''}`} placeholder="30"
                     value={newRemStock} onChange={e => setNewRemStock(e.target.value)}
+                    onMouseEnter={() => falarTexto("Quantidade de doses em stock")}
                   />
                 </div>
               )}
@@ -1181,8 +1208,9 @@ export default function App() {
             <div className="form-field">
               <label className="font-bold">Horário</label>
               <input 
-                type="time" className="input-cuida text-center text-2xl font-bold"
+                type="time" className={`input-cuida text-center font-bold ${profile.easyMode ? 'text-3xl py-3' : 'text-2xl'}`}
                 value={newRemTime} onChange={e => setNewRemTime(e.target.value)}
+                onMouseEnter={() => falarTexto("Selecione o horário para o lembrete")}
               />
             </div>
 
@@ -1200,8 +1228,8 @@ export default function App() {
               </div>
             </div>
 
-            <button onClick={saveReminder} className="btn-cuida btn-primary" style={{ marginTop: '24px' }}>
-              <Check size={24} /> Guardar Lembrete
+            <button onClick={saveReminder} className={`btn-cuida btn-primary ${profile.easyMode ? 'py-4 px-6 text-lg' : ''}`} style={{ marginTop: '24px' }} onMouseEnter={() => falarTexto("Guardar o lembrete")}>
+              <Check size={profile.easyMode ? 32 : 24} /> Guardar Lembrete
             </button>
 
           </div>
@@ -1213,8 +1241,8 @@ export default function App() {
   const renderSchedule = () => {
     const list = (profile.role === 'monitor' && profile.linkedPatientId) ? patientReminders : reminders;
     return (
-      <div className="app-container">
-        <div className="max-width-wrapper">
+      <div className="app-container w-full px-4 sm:px-6 md:px-8">
+        <div className="max-w-2xl mx-auto">
           <div className="flex-gap" style={{ marginBottom: '32px' }}>
             <button onClick={() => setCurrentView('home')} className="scroll-btn" style={{ padding: '12px' }}><ArrowLeft size={24} /></button>
             <h1>Horários Agendados</h1>
@@ -1246,16 +1274,16 @@ export default function App() {
   };
 
   const renderFamily = () => (
-    <div className="app-container">
-      <div className="max-width-wrapper">
+    <div className="app-container w-full px-4 sm:px-6 md:px-8">
+      <div className="max-w-2xl mx-auto">
         <div className="flex-gap" style={{ marginBottom: '32px' }}>
           <button onClick={() => setCurrentView('home')} className="scroll-btn" style={{ padding: '12px' }}><ArrowLeft size={24} /></button>
           <h1>Família & Histórico</h1>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }} className="no-print">
-          <button onClick={shareWhatsApp} className="btn-cuida btn-secondary" style={{ flex: 1, backgroundColor: '#25d366', color: 'white' }}><Share2 size={20} /> Compartilhar via WhatsApp</button>
-          <button onClick={() => window.print()} className="btn-cuida btn-primary" style={{ flex: 1 }}><Printer size={20} /> Imprimir PDF</button>
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }} className="no-print flex-col sm:flex-row">
+          <button onClick={shareWhatsApp} className={`btn-cuida btn-secondary ${profile.easyMode ? 'py-4 px-6 text-lg' : 'flex-1'}`} style={{ backgroundColor: '#25d366', color: 'white' }} onMouseEnter={() => falarTexto("Compartilhar atividades via WhatsApp")}><Share2 size={profile.easyMode ? 28 : 20} /> Compartilhar via WhatsApp</button>
+          <button onClick={() => window.print()} className={`btn-cuida btn-primary ${profile.easyMode ? 'py-4 px-6 text-lg' : 'flex-1'}`} onMouseEnter={() => falarTexto("Imprimir relatório em PDF")}><Printer size={profile.easyMode ? 28 : 20} /> Imprimir PDF</button>
         </div>
 
         <div className="card-cuida print-area">
@@ -1280,8 +1308,8 @@ export default function App() {
   );
 
   const renderChat = () => (
-    <div className="app-container">
-      <div className="max-width-wrapper h-screen flex flex-col">
+    <div className="app-container w-full px-4 sm:px-6 md:px-8">
+      <div className="max-w-2xl mx-auto h-screen flex flex-col">
         <div className="flex-gap mb-6">
           <button onClick={() => setCurrentView('home')} className="scroll-btn p-3"><ArrowLeft size={24} /></button>
           <h1 className="text-3xl font-bold">Chat com Família</h1>
@@ -1301,66 +1329,51 @@ export default function App() {
           })}
         </div>
 
-        <div className="flex gap-3">
-          <button onClick={() => startListening(setNewChatMessage)} className="scroll-btn p-4"><Mic size={24} /></button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button onClick={() => startListening(setNewChatMessage)} className={`scroll-btn ${profile.easyMode ? 'p-6' : 'p-4'}`} onMouseEnter={() => falarTexto("Enviar mensagem de voz")}><Mic size={profile.easyMode ? 32 : 24} /></button>
           <input 
-            type="text" className="input-cuida flex-1" placeholder="Escreva uma mensagem..."
+            type="text" className={`input-cuida flex-1 ${profile.easyMode ? 'text-lg py-3' : ''}`} placeholder="Escreva uma mensagem..."
             value={newChatMessage} onChange={e => setNewChatMessage(e.target.value)}
             onKeyPress={e => e.key === 'Enter' && sendChatMessage()}
+            onMouseEnter={() => falarTexto("Digite sua mensagem aqui")}
           />
-          <button onClick={sendChatMessage} className="btn-cuida btn-primary w-auto"><Send size={24} /></button>
+          <button onClick={sendChatMessage} className={`btn-cuida btn-primary w-full sm:w-auto ${profile.easyMode ? 'py-3 px-6 text-lg' : ''}`} onMouseEnter={() => falarTexto("Enviar mensagem")}><Send size={profile.easyMode ? 32 : 24} /></button>
         </div>
       </div>
     </div>
   );
 
   const renderSettings = () => (
-    <div className="app-container">
-      <div className="max-width-wrapper">
+    <div className="app-container w-full px-4 sm:px-6 md:px-8">
+      <div className="max-w-2xl mx-auto">
         <div className="flex-gap mb-8">
           <button onClick={() => setCurrentView('home')} className="scroll-btn p-3"><ArrowLeft size={24} /></button>
           <h1 className="text-3xl font-bold">Ajustes do Sistema</h1>
         </div>
 
         <div className="card-cuida flex flex-col gap-6">
-          <button onClick={() => setCurrentView('editProfile')} className="btn-cuida btn-secondary"><User size={20} /> Editar Perfil</button>
+          <button onClick={() => setCurrentView('editProfile')} className={`btn-cuida btn-secondary ${profile.easyMode ? 'py-4 px-6 text-lg' : ''}`} onMouseEnter={() => falarTexto("Editar seu perfil")}><User size={profile.easyMode ? 28 : 20} /> Editar Perfil</button>
           
-          <div className="flex-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <strong>Modo Noturno</strong>
-              <p className="text-text-muted">Cores escuras ideais para a noite.</p>
+              <strong className={profile.easyMode ? 'text-lg' : ''}>Modo Noturno</strong>
+              <p className={`text-text-muted ${profile.easyMode ? 'text-lg' : ''}`}>Cores escuras ideais para a noite.</p>
             </div>
-            <button onClick={() => updateProfile({ darkMode: !isDark })} className="scroll-btn">
-               {isDark ? <Sun size={20} /> : <Moon size={20} />} {isDark ? 'Modo Claro' : 'Modo Escuro'}
+            <button onClick={() => updateProfile({ darkMode: !isDark })} className={`scroll-btn whitespace-nowrap ${profile.easyMode ? 'py-3 px-6 text-lg' : ''}`} onMouseEnter={() => falarTexto(isDark ? "Ativar modo claro" : "Ativar modo escuro")}>
+               {isDark ? <Sun size={profile.easyMode ? 28 : 20} /> : <Moon size={profile.easyMode ? 28 : 20} />} {isDark ? 'Modo Claro' : 'Modo Escuro'}
             </button>
           </div>
 
-          <div className="flex-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <strong>Modo Fácil (Acessibilidade)</strong>
-              <p className="text-text-muted">Ativa leitura de voz e aumenta botões.</p>
+              <strong className={profile.easyMode ? 'text-lg' : ''}>Modo Fácil (Acessibilidade)</strong>
+              <p className={`text-text-muted ${profile.easyMode ? 'text-lg' : ''}`}>Ativa leitura de voz e aumenta botões.</p>
             </div>
             <input 
-              type="checkbox" checked={profile.easyMode} className="w-6 h-6"
+              type="checkbox" checked={profile.easyMode} className={`${profile.easyMode ? 'w-8 h-8' : 'w-6 h-6'}`}
               onChange={e => updateProfile({ easyMode: e.target.checked })}
+              onMouseEnter={() => falarTexto(profile.easyMode ? "Desativar modo fácil" : "Ativar modo fácil")}
             />
-          </div>
-
-          <div className="form-field">
-            <label className="font-bold">Cor Principal</label>
-            <div className="flex gap-3">
-              {['blue', 'green', 'purple', 'red'].map(col => (
-                <button 
-                  key={col} onClick={() => updateProfile({ theme: col })}
-                  className={`w-12 h-12 rounded-full shadow-md ${
-                    col === 'blue' ? 'bg-blue-600' : 
-                    col === 'green' ? 'bg-green-600' : 
-                    col === 'purple' ? 'bg-purple-600' : 
-                    'bg-red-600'
-                  } ${profile.theme === col ? 'ring-4 ring-white' : ''}`}
-                />
-              ))}
-            </div>
           </div>
 
           <div className="border-t-2 border-gray-200 pt-6">
@@ -1382,8 +1395,8 @@ export default function App() {
   );
 
   const renderAiAssistant = () => (
-    <div className="app-container">
-      <div className="max-width-wrapper">
+    <div className="app-container w-full px-4 sm:px-6 md:px-8">
+      <div className="max-w-2xl mx-auto">
         <div className="flex-gap" style={{ marginBottom: '32px' }}>
           <button onClick={() => { setCurrentView('home'); setAiResult(''); }} className="scroll-btn" style={{ padding: '12px' }}><ArrowLeft size={24} /></button>
           <h1>Assistente de Saúde ✨</h1>
