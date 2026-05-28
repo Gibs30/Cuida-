@@ -121,6 +121,7 @@ export default function App() {
   const [newRemDetail, setNewRemDetail] = useState('');
   const [newRemTime, setNewRemTime] = useState('');
   const [newRemType, setNewRemType] = useState('Pill');
+  const [newRemIcon, setNewRemIcon] = useState('Pill');
   const [newRemDays, setNewRemDays] = useState([]); 
   const [newRemStock, setNewRemStock] = useState(''); 
   const [genericSuggestions, setGenericSuggestions] = useState(''); 
@@ -250,7 +251,7 @@ export default function App() {
     } catch (e) { console.log('Áudio não suportado', e); }
   }, [profile.alarmSound]);
 
-  // --- AUTENTICAÇÃO ANÓNIMA SUPABASE ---
+  // --- AUTENTICAÇÃO ANÓNIMA SUPABASE (AUTO-LOGIN) ---
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -273,7 +274,6 @@ export default function App() {
         setUser(session.user);
       } else {
         setUser(null);
-        setCurrentView('loading');
       }
     });
 
@@ -556,7 +556,7 @@ export default function App() {
         title: newRemTitle, 
         detail: newRemDetail, 
         time: newRemTime, 
-        type: newRemType, 
+        type: newRemIcon, 
         days: newRemDays,
         stock: newRemStock ? parseInt(newRemStock) : null
       };
@@ -576,14 +576,14 @@ export default function App() {
 
   const resetForm = () => {
     setNewRemTitle(''); setNewRemDetail(''); setNewRemTime(''); 
-    setNewRemType('Pill'); setNewRemDays([]); setEditingId(null);
+    setNewRemType('Pill'); setNewRemIcon('Pill'); setNewRemDays([]); setEditingId(null);
     setNewRemStock(''); setGenericSuggestions(''); setInteractionWarning('');
     setCurrentView('schedule');
   };
 
   const closeAddReminder = () => {
     setNewRemTitle(''); setNewRemDetail(''); setNewRemTime(''); 
-    setNewRemType('Pill'); setNewRemDays([]); setEditingId(null);
+    setNewRemType('Pill'); setNewRemIcon('Pill'); setNewRemDays([]); setEditingId(null);
     setNewRemStock(''); setGenericSuggestions(''); setInteractionWarning('');
     setCurrentView('home');
   };
@@ -1303,7 +1303,7 @@ export default function App() {
                 <input 
                   type="text" 
                   className="flex-1 px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 outline-none text-lg"
-                  placeholder={placeholderTexts[newRemType]}
+                  placeholder={placeholderTexts[newRemIcon]}
                   value={newRemTitle} 
                   onChange={e => setNewRemTitle(e.target.value)}
                   onBlur={() => handleMedicationInputBlur(newRemTitle)}
@@ -1316,8 +1316,33 @@ export default function App() {
               </div>
             </div>
 
+            {/* Icon Selector */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-900 mb-3">Escolher Ícone</label>
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                {['Pill', 'Calendar', 'ShoppingCart', 'Droplets', 'Clock', 'Brain'].map(icon => {
+                  const Icon = iconMap[icon];
+                  return (
+                    <button
+                      key={icon}
+                      onClick={() => setNewRemIcon(icon)}
+                      className={`flex flex-col items-center justify-center p-4 rounded-xl transition-all border-2 ${
+                        newRemIcon === icon
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg'
+                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-indigo-300'
+                      }`}
+                      title={icon}
+                    >
+                      <Icon size={28} />
+                      <span className="text-xs mt-2 font-semibold">{icon}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Drug Interaction Warning */}
-            {newRemType === 'Pill' && (isCheckingInteractions || interactionWarning) && (
+            {newRemIcon === 'Pill' && (isCheckingInteractions || interactionWarning) && (
               <div className="bg-red-50 border-2 border-red-300 rounded-xl p-4 flex gap-3">
                 <AlertTriangle size={24} className="text-red-600 flex-shrink-0 mt-0.5" />
                 <div>
@@ -1328,7 +1353,7 @@ export default function App() {
             )}
 
             {/* Generic Suggestions */}
-            {newRemType === 'Pill' && (aiLoading || genericSuggestions) && (
+            {newRemIcon === 'Pill' && (aiLoading || genericSuggestions) && (
               <div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-4 flex gap-3">
                 <Sparkles size={24} className="text-purple-600 flex-shrink-0 mt-0.5" />
                 <div>
@@ -1351,7 +1376,7 @@ export default function App() {
                 />
               </div>
 
-              {newRemType === 'Pill' && (
+              {newRemIcon === 'Pill' && (
                 <div>
                   <label className="block text-sm font-semibold text-slate-900 mb-2">Em Stock</label>
                   <input 
@@ -1841,6 +1866,7 @@ export default function App() {
     setNewRemDetail(reminder.detail || '');
     setNewRemTime(reminder.time);
     setNewRemType(reminder.type);
+    setNewRemIcon(reminder.type || 'Pill');
     setNewRemDays(reminder.days || []);
     setNewRemStock(reminder.stock || '');
     setCurrentView('add');
