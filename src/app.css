@@ -1,0 +1,417 @@
+/* ==========================================================================
+   1. CONFIGURAÇÃO DE TEMAS E VARIÁVEIS (Suporta Modo Escuro e Modo Fácil)
+   ========================================================================== */
+:root {
+  --primary: #2563eb;
+  --primary-light: #eff6ff;
+  --primary-hover: #1d4ed8;
+  --bg-app: #f8fafc;
+  --bg-card: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --success: #10b981;
+  --success-light: #ecfdf5;
+  --success-text: #047857;
+  --danger: #ef4444;
+  --danger-light: #fef2f2;
+  --danger-text: #b91c1c;
+  --orange: #f97316;
+  --orange-light: #fff7ed;
+  --orange-text: #c2410c;
+  --purple: #8b5cf6;
+  --purple-light: #f5f3ff;
+  --purple-text: #6d28d9;
+  
+  --font-size-base: 16px;
+  --radius: 20px;
+}
+
+/* Temas de Cores Selecionáveis */
+[data-theme="green"] {
+  --primary: #10b981;
+  --primary-light: #ecfdf5;
+  --primary-hover: #059669;
+}
+[data-theme="purple"] {
+  --primary: #8b5cf6;
+  --primary-light: #f5f3ff;
+  --primary-hover: #7c3aed;
+}
+[data-theme="red"] {
+  --primary: #ef4444;
+  --primary-light: #fef2f2;
+  --primary-hover: #dc2626;
+}
+
+/* Modo Escuro */
+[data-dark="true"] {
+  --bg-app: #0f172a;
+  --bg-card: #1e293b;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border: #334155;
+  --primary-light: rgba(37, 99, 235, 0.15);
+  --success-light: rgba(16, 185, 129, 0.15);
+  --danger-light: rgba(239, 68, 68, 0.15);
+  --orange-light: rgba(249, 115, 22, 0.15);
+  --purple-light: rgba(139, 92, 246, 0.15);
+}
+
+/* Modo Fácil (Acessibilidade: Fontes e Padding Maiores) */
+[data-easy="true"] {
+  --font-size-base: 22px;
+  --radius: 28px;
+}
+
+/* ==========================================================================
+   2. ESTILOS BASE E LAYOUT RESPONSIVO
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+body {
+  font-size: var(--font-size-base);
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  transition: background-color 0.3s, color 0.3s;
+  overflow-x: hidden;
+}
+
+/* Grid Responsivo para Desktop e Mobile */
+.app-container {
+  width: 100%;
+  min-height: 100vh;
+  padding: 16px;
+}
+
+@media (min-width: 768px) {
+  .app-container {
+    padding: 40px;
+  }
+}
+
+.max-width-wrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Flexbox utilitários */
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.flex-gap {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+/* Grid de Cards */
+.grid-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin: 24px 0;
+}
+
+@media (min-width: 768px) {
+  .grid-cards {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+}
+
+.grid-two-columns {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .grid-two-columns {
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 40px;
+  }
+}
+
+/* ==========================================================================
+   3. COMPONENTES DO CUIDA+ (Cards, Botões e Inputs)
+   ========================================================================== */
+.card-cuida {
+  background-color: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card-cuida:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+}
+
+/* Botões do Menu Inicial */
+.menu-btn {
+  background-color: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  color: var(--text-main);
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.menu-btn:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.menu-btn-icon-wrapper {
+  padding: 16px;
+  border-radius: 50%;
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+/* Botões Gerais */
+.btn-cuida {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 24px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+  transform: scale(0.98);
+}
+
+.btn-secondary {
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border: 2px solid transparent;
+}
+
+.btn-secondary:hover {
+  border-color: var(--primary);
+}
+
+/* Banner Informativo */
+.status-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border-radius: var(--radius);
+  margin-bottom: 24px;
+}
+
+.status-banner.orange {
+  background-color: var(--orange-light);
+  border: 2px solid var(--orange);
+  color: var(--orange-text);
+}
+
+.status-banner.red-alert {
+  background-color: var(--danger-light);
+  border: 3px solid var(--danger);
+  color: var(--danger-text);
+  animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+  70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* Formulários */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.form-field label {
+  font-weight: bold;
+}
+
+.input-cuida {
+  width: 100%;
+  padding: 16px;
+  font-size: 1.1rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-cuida:focus {
+  border-color: var(--primary);
+}
+
+/* Elementos Deslizantes Horizontais (Fácil Leitura) */
+.scroll-row {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+}
+.scroll-row::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-btn {
+  padding: 12px 24px;
+  border-radius: var(--radius);
+  border: 2px solid var(--border);
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  font-weight: bold;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.scroll-btn.active {
+  background-color: var(--primary);
+  color: white;
+  border-color: transparent;
+}
+
+/* ==========================================================================
+   4. CHAT, HISTÓRICO, OVERLAY DE ALERTA E WIDGETS
+   ========================================================================== */
+.chat-box {
+  height: 380px;
+  overflow-y: auto;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.chat-bubble {
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  max-width: 80%;
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
+.chat-bubble.me {
+  background-color: var(--primary);
+  color: white;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-bubble.other {
+  background-color: var(--border);
+  color: var(--text-main);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+/* Widget SOS Flutuante */
+.sos-floating {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99;
+  background-color: var(--danger);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 76px;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
+  animation: heartbeat 1.5s infinite;
+}
+
+@keyframes heartbeat {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* Alerta de Lembrete Ativo (Full-screen) */
+.alert-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.alert-modal {
+  background-color: var(--bg-card);
+  border: 4px solid var(--primary);
+  border-radius: 40px;
+  width: 100%;
+  max-width: 600px;
+  padding: 32px;
+  text-align: center;
+}
+
+.alert-icon-ring {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+}
+
+.alert-highlight-box {
+  background-color: var(--primary-light);
+  border: 3px solid var(--primary);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin: 24px 0;
+}
