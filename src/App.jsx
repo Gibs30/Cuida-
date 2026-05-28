@@ -12,7 +12,7 @@ import { createClient } from '@supabase/supabase-js';
 // Temporarily hardcode Supabase credentials to avoid broken deploy while environment variables are fixed.
 // WARNING: Hardcoding credentials is insecure — remove this as soon as Vercel env vars work.
 const supabaseUrl = 'https://vaszaiekhclhcjimzecu.supabase.co';
-const supabaseAnonKey = 'SUA_CHAVE_LONGA_QUE_COMECA_COM_eyJhbGciOi';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZhc3phaWVraGNsaGNqaW16ZWN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3ODMwMzIsImV4cCI6MjA5NTM1OTAzMn0.bgJ1DfBTJsqJULaK9-MvyneIUJs0qHJaOLLVAvQt7U8';
 
 console.warn('Supabase client using hardcoded credentials — remove after deploy fix.');
 
@@ -1461,6 +1461,16 @@ export default function App() {
         title="Botão de Emergência">
         <Phone size={48} />
       </button>
+    );
+  };
+
+  // Simple in-app toast renderer (fallback). Uses `toastMessage` state set by `showToast()`.
+  const renderToast = () => {
+    if (!toastMessage) return null;
+    return (
+      <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--primary)', color: 'white', padding: '10px 16px', borderRadius: 8, boxShadow: '0 6px 18px rgba(0,0,0,0.12)', zIndex: 9999 }}>
+        {toastMessage}
+      </div>
     );
   };
 
