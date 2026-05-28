@@ -810,16 +810,16 @@ export default function App() {
   // --- ELEMENTOS DE RENDER DO TEMPLATE ---
 
   const renderOnboarding = () => (
-    <div className="app-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="card-cuida" style={{ maxWidth: '500px', width: '100%', textAlign: 'center' }}>
-        <div style={{ display: 'inline-block', padding: '16px', borderRadius: '50%', backgroundColor: 'var(--primary-light)', color: 'var(--primary)', marginBottom: '16px' }}>
+    <div className="app-container flex items-center justify-center">
+      <div className="card-cuida max-w-md w-full text-center">
+        <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary-light text-primary mb-4">
           <Heart size={64} className="animate-pulse" />
         </div>
-        <h1 style={{ fontSize: '2.2rem', marginBottom: '8px' }}>Bem-vindo ao Cuida+</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', marginBottom: '32px' }}>Controle seu tempo ❤️</p>
+        <h1 className="text-4xl font-bold mb-2">Bem-vindo ao Cuida+</h1>
+        <p className="text-text-muted text-lg mb-8">Controle seu tempo ❤️</p>
         
         <div className="form-field">
-          <label style={{ textAlign: 'left' }}>Como quer ser chamado?</label>
+          <label className="text-left font-bold">Como quer ser chamado?</label>
           <input 
             type="text" className="input-cuida" placeholder="Insira o seu nome"
             value={onboardingName} onChange={e => setOnboardingName(e.target.value)}
@@ -827,19 +827,17 @@ export default function App() {
         </div>
 
         <div className="form-field">
-          <label style={{ textAlign: 'left' }}>Tipo de Perfil</label>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <label className="text-left font-bold">Tipo de Perfil</label>
+          <div className="flex gap-3">
             <button 
               onClick={() => setOnboardingRole('patient')}
-              className={`scroll-btn ${onboardingRole === 'patient' ? 'active' : ''}`}
-              style={{ flex: 1, padding: '16px' }}
+              className={`scroll-btn flex-1 ${onboardingRole === 'patient' ? 'active' : ''}`}
             >
               Sou Paciente
             </button>
             <button 
               onClick={() => setOnboardingRole('monitor')}
-              className={`scroll-btn ${onboardingRole === 'monitor' ? 'active' : ''}`}
-              style={{ flex: 1, padding: '16px' }}
+              className={`scroll-btn flex-1 ${onboardingRole === 'monitor' ? 'active' : ''}`}
             >
               Sou Cuidador
             </button>
@@ -848,7 +846,7 @@ export default function App() {
 
         <button 
           onClick={() => saveProfile(onboardingName, onboardingPhone, onboardingRole)}
-          className="btn-cuida btn-primary" style={{ marginTop: '16px' }}
+          className="btn-cuida btn-primary mt-4"
         >
           Aceder ao Painel
         </button>
@@ -899,10 +897,10 @@ export default function App() {
       <div className="max-width-wrapper">
         
         {/* Cabeçalho */}
-        <div className="flex-between" style={{ marginBottom: '32px' }}>
+        <div className="flex-between mb-8">
           <div>
-            <h1 style={{ fontSize: '2.5rem' }}>Olá, {profile.name} 🌷</h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem' }}>O que vamos fazer hoje?</p>
+            <h1 className="text-5xl font-bold mb-1">Olá, {profile.name} 🌷</h1>
+            <p className="text-text-muted text-lg">O que vamos fazer hoje?</p>
           </div>
           
           <button 
@@ -911,8 +909,7 @@ export default function App() {
               updateProfile({ easyMode: newMode });
               speak(newMode ? "Modo fácil ativado." : "Modo fácil desativado.");
             }}
-            className={`scroll-btn ${profile.easyMode ? 'active' : ''}`}
-            style={{ padding: '16px' }}
+            className={`scroll-btn p-4 ${profile.easyMode ? 'active' : ''}`}
           >
             <Volume2 size={24} />
           </button>
@@ -922,7 +919,7 @@ export default function App() {
         <div className="status-banner orange">
           <Flame size={36} />
           <div>
-            <strong style={{ fontSize: '1.3rem', display: 'block' }}>Dias Seguidos: {streakDays}</strong>
+            <strong className="text-lg block">Dias Seguidos: {streakDays}</strong>
             <span>Estás a ir muito bem! Mantém o ritmo diário.</span>
           </div>
         </div>
@@ -931,22 +928,22 @@ export default function App() {
         <div className="grid-cards">
           <button onClick={() => { setEditingId(null); setCurrentView('add'); }} className="menu-btn">
             <div className="menu-btn-icon-wrapper"><Plus size={32} /></div>
-            <span style={{ fontWeight: 'bold' }}>Novo Aviso</span>
+            <span className="font-bold">Novo Aviso</span>
           </button>
 
           <button onClick={() => setCurrentView('schedule')} className="menu-btn">
             <div className="menu-btn-icon-wrapper"><ClipboardList size={32} /></div>
-            <span style={{ fontWeight: 'bold' }}>Meus Horários</span>
+            <span className="font-bold">Meus Horários</span>
           </button>
 
           <button onClick={() => setCurrentView('family')} className="menu-btn">
             <div className="menu-btn-icon-wrapper"><Users size={32} /></div>
-            <span style={{ fontWeight: 'bold' }}>Família & Histórico</span>
+            <span className="font-bold">Família & Histórico</span>
           </button>
 
           <button onClick={() => setCurrentView('settings')} className="menu-btn">
             <div className="menu-btn-icon-wrapper"><Settings size={32} /></div>
-            <span style={{ fontWeight: 'bold' }}>Ajustes</span>
+            <span className="font-bold">Ajustes</span>
           </button>
         </div>
 
@@ -954,25 +951,23 @@ export default function App() {
         <div className="grid-two-columns">
           <button 
             onClick={() => setCurrentView('aiAssistant')}
-            className="btn-cuida" 
-            style={{ background: 'linear-gradient(to right, #8b5cf6, #6366f1)', color: 'white', padding: '32px', textAlign: 'left', justifyContent: 'flex-start' }}
+            className="btn-cuida bg-gradient-to-r from-purple to-indigo-500 text-white p-8 text-left justify-start"
           >
             <Sparkles size={36} />
             <div>
-              <strong style={{ fontSize: '1.4rem', display: 'block' }}>Assistente de Saúde ✨</strong>
-              <span style={{ opacity: 0.9, fontWeight: 'normal' }}>Dicas de organização, remédios e saúde geral.</span>
+              <strong className="text-xl block">Assistente de Saúde ✨</strong>
+              <span className="opacity-90 font-normal">Dicas de organização, remédios e saúde geral.</span>
             </div>
           </button>
 
           <button 
             onClick={() => setCurrentView('chat')}
-            className="btn-cuida btn-secondary" 
-            style={{ padding: '32px', textAlign: 'left', justifyContent: 'flex-start', border: '2px solid var(--border)' }}
+            className="btn-cuida btn-secondary p-8 text-left justify-start border-2 border-gray-300"
           >
             <MessageCircle size={36} className="text-primary" />
             <div>
-              <strong style={{ fontSize: '1.4rem', display: 'block' }}>Mensagens 💬</strong>
-              <span style={{ color: 'var(--text-muted)', fontWeight: 'normal' }}>Conversar com o familiar cuidador.</span>
+              <strong className="text-xl block">Mensagens 💬</strong>
+              <span className="text-text-muted font-normal">Conversar com o familiar cuidador.</span>
             </div>
           </button>
         </div>
@@ -1111,53 +1106,53 @@ export default function App() {
     return (
       <div className="app-container">
         <div className="max-width-wrapper">
-          <div className="flex-gap" style={{ marginBottom: '32px' }}>
-            <button onClick={closeAddReminder} className="scroll-btn" style={{ padding: '12px' }}><ArrowLeft size={24} /></button>
-            <h1>{editingId ? 'Editar Aviso' : 'Novo Lembrete'}</h1>
+          <div className="flex-gap mb-8">
+            <button onClick={closeAddReminder} className="scroll-btn p-3"><ArrowLeft size={24} /></button>
+            <h1 className="text-3xl font-bold">{editingId ? 'Editar Aviso' : 'Novo Lembrete'}</h1>
           </div>
 
-          <div className="card-cuida" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="card-cuida flex flex-col gap-5">
             
             <div className="form-field">
-              <label>O que é?</label>
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <label className="font-bold">O que é?</label>
+              <div className="flex gap-3">
                 <input 
-                  type="text" className="input-cuida" placeholder={placeholderTexts[newRemType]}
+                  type="text" className="input-cuida flex-1" placeholder={placeholderTexts[newRemType]}
                   value={newRemTitle} onChange={e => setNewRemTitle(e.target.value)}
                   onBlur={() => handleMedicationInputBlur(newRemTitle)}
                 />
-                <label className="scroll-btn" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <label className="scroll-btn flex items-center gap-2 cursor-pointer">
                   {isAnalyzingImage ? <Loader2 className="animate-spin text-purple" size={24} /> : <Camera size={24} />}
                   <span>Foto</span>
-                  <input type="file" accept="image/*" capture="environment" className="hidden" style={{ display: 'none' }} onChange={recognizeMedicationFromImage} />
+                  <input type="file" accept="image/*" capture="environment" className="hidden" onChange={recognizeMedicationFromImage} />
                 </label>
               </div>
             </div>
 
             {/* Alerta IA de Conflito de Fármacos */}
             {newRemType === 'Pill' && (isCheckingInteractions || interactionWarning) && (
-              <div className="status-banner red-alert" style={{ margin: '0' }}>
+              <div className="status-banner red-alert m-0">
                 <AlertTriangle size={32} />
                 <div>
-                  <strong style={{ display: 'block' }}>Risco detetado pela IA!</strong>
+                  <strong className="block">Risco detetado pela IA!</strong>
                   <span>{isCheckingInteractions ? 'A examinar contraindicações...' : interactionWarning}</span>
                 </div>
               </div>
             )}
 
             {newRemType === 'Pill' && (aiLoading || genericSuggestions) && (
-              <div className="status-banner" style={{ background: 'var(--purple-light)', border: '2px solid var(--purple)', color: 'var(--purple-text)', margin: '0' }}>
+              <div className="status-banner bg-purple-light border-2 border-purple text-purple-text m-0">
                 <Sparkles size={32} />
                 <div>
-                  <strong style={{ display: 'block' }}>Opções Genéricas (IA)</strong>
+                  <strong className="block">Opções Genéricas (IA)</strong>
                   <span>{aiLoading ? 'A pesquisar base de dados...' : genericSuggestions}</span>
                 </div>
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-              <div className="form-field" style={{ flex: 1 }}>
-                <label>Instrução (opcional)</label>
+            <div className="flex gap-4 flex-wrap">
+              <div className="form-field flex-1">
+                <label className="font-bold">Instrução (opcional)</label>
                 <input 
                   type="text" className="input-cuida" placeholder="Ex: Tomar após a refeição"
                   value={newRemDetail} onChange={e => setNewRemDetail(e.target.value)}
@@ -1165,8 +1160,8 @@ export default function App() {
               </div>
 
               {newRemType === 'Pill' && (
-                <div className="form-field" style={{ width: '150px' }}>
-                  <label>Em Stock</label>
+                <div className="form-field w-40">
+                  <label className="font-bold">Em Stock</label>
                   <input 
                     type="number" className="input-cuida" placeholder="30"
                     value={newRemStock} onChange={e => setNewRemStock(e.target.value)}
@@ -1176,9 +1171,9 @@ export default function App() {
             </div>
 
             <div className="form-field">
-              <label>Horário</label>
+              <label className="font-bold">Horário</label>
               <input 
-                type="time" className="input-cuida" style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: 'bold' }}
+                type="time" className="input-cuida text-center text-2xl font-bold"
                 value={newRemTime} onChange={e => setNewRemTime(e.target.value)}
               />
             </div>
@@ -1278,34 +1273,34 @@ export default function App() {
 
   const renderChat = () => (
     <div className="app-container">
-      <div className="max-width-wrapper" style={{ height: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column' }}>
-        <div className="flex-gap" style={{ marginBottom: '24px' }}>
-          <button onClick={() => setCurrentView('home')} className="scroll-btn" style={{ padding: '12px' }}><ArrowLeft size={24} /></button>
-          <h1>Chat com Família</h1>
+      <div className="max-width-wrapper h-screen flex flex-col">
+        <div className="flex-gap mb-6">
+          <button onClick={() => setCurrentView('home')} className="scroll-btn p-3"><ArrowLeft size={24} /></button>
+          <h1 className="text-3xl font-bold">Chat com Família</h1>
         </div>
 
-        <div className="chat-box" style={{ flex: 1 }}>
+        <div className="chat-box flex-1">
           {chatMessages.length === 0 ? (
-             <p style={{ textAlign: 'center', color: 'var(--text-muted)', margin: 'auto' }}>Nenhuma mensagem. Comece a conversa!</p>
+             <p className="text-center text-text-muted m-auto">Nenhuma mensagem. Comece a conversa!</p>
           ) : chatMessages.map(msg => {
              const isMe = msg.sender_role === profile.role;
              return (
                <div key={msg.id} className={`chat-bubble ${isMe ? 'me' : 'other'}`}>
-                 <span style={{ fontSize: '0.8rem', display: 'block', opacity: 0.8, marginBottom: '4px' }}>{msg.sender_name}</span>
+                 <span className="text-xs block opacity-80 mb-1">{msg.sender_name}</span>
                  <span>{msg.text}</span>
                </div>
              );
           })}
         </div>
 
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button onClick={() => startListening(setNewChatMessage)} className="scroll-btn" style={{ padding: '16px' }}><Mic size={24} /></button>
+        <div className="flex gap-3">
+          <button onClick={() => startListening(setNewChatMessage)} className="scroll-btn p-4"><Mic size={24} /></button>
           <input 
-            type="text" className="input-cuida" placeholder="Escreva uma mensagem..."
+            type="text" className="input-cuida flex-1" placeholder="Escreva uma mensagem..."
             value={newChatMessage} onChange={e => setNewChatMessage(e.target.value)}
             onKeyPress={e => e.key === 'Enter' && sendChatMessage()}
           />
-          <button onClick={sendChatMessage} className="btn-cuida btn-primary" style={{ width: 'auto' }}><Send size={24} /></button>
+          <button onClick={sendChatMessage} className="btn-cuida btn-primary w-auto"><Send size={24} /></button>
         </div>
       </div>
     </div>
@@ -1314,18 +1309,18 @@ export default function App() {
   const renderSettings = () => (
     <div className="app-container">
       <div className="max-width-wrapper">
-        <div className="flex-gap" style={{ marginBottom: '32px' }}>
-          <button onClick={() => setCurrentView('home')} className="scroll-btn" style={{ padding: '12px' }}><ArrowLeft size={24} /></button>
-          <h1>Ajustes do Sistema</h1>
+        <div className="flex-gap mb-8">
+          <button onClick={() => setCurrentView('home')} className="scroll-btn p-3"><ArrowLeft size={24} /></button>
+          <h1 className="text-3xl font-bold">Ajustes do Sistema</h1>
         </div>
 
-        <div className="card-cuida" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div className="card-cuida flex flex-col gap-6">
           <button onClick={() => setCurrentView('editProfile')} className="btn-cuida btn-secondary"><User size={20} /> Editar Perfil</button>
           
           <div className="flex-between">
             <div>
               <strong>Modo Noturno</strong>
-              <p style={{ color: 'var(--text-muted)' }}>Cores escuras ideais para a noite.</p>
+              <p className="text-text-muted">Cores escuras ideais para a noite.</p>
             </div>
             <button onClick={() => updateProfile({ darkMode: !isDark })} className="scroll-btn">
                {isDark ? <Sun size={20} /> : <Moon size={20} />} {isDark ? 'Modo Claro' : 'Modo Escuro'}
@@ -1335,37 +1330,42 @@ export default function App() {
           <div className="flex-between">
             <div>
               <strong>Modo Fácil (Acessibilidade)</strong>
-              <p style={{ color: 'var(--text-muted)' }}>Ativa leitura de voz e aumenta botões.</p>
+              <p className="text-text-muted">Ativa leitura de voz e aumenta botões.</p>
             </div>
             <input 
-              type="checkbox" checked={profile.easyMode} style={{ width: '24px', height: '24px' }}
+              type="checkbox" checked={profile.easyMode} className="w-6 h-6"
               onChange={e => updateProfile({ easyMode: e.target.checked })}
             />
           </div>
 
           <div className="form-field">
-            <label>Cor Principal</label>
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <label className="font-bold">Cor Principal</label>
+            <div className="flex gap-3">
               {['blue', 'green', 'purple', 'red'].map(col => (
                 <button 
                   key={col} onClick={() => updateProfile({ theme: col })}
-                  style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: col === 'blue' ? '#2563eb' : col === 'green' ? '#10b981' : col === 'purple' ? '#8b5cf6' : '#ef4444', border: profile.theme === col ? '4px solid white' : 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                  className={`w-12 h-12 rounded-full shadow-md ${
+                    col === 'blue' ? 'bg-blue-600' : 
+                    col === 'green' ? 'bg-green-600' : 
+                    col === 'purple' ? 'bg-purple-600' : 
+                    'bg-red-600'
+                  } ${profile.theme === col ? 'ring-4 ring-white' : ''}`}
                 />
               ))}
             </div>
           </div>
 
-          <div style={{ borderTop: '2px solid var(--border)', paddingTop: '24px' }}>
+          <div className="border-t-2 border-gray-200 pt-6">
              {confirmLogout ? (
-               <div style={{ textAlign: 'center' }}>
-                 <p style={{ fontWeight: 'bold', color: 'var(--danger)', marginBottom: '16px' }}>Irá eliminar todas as suas configurações deste dispositivo. Continuar?</p>
-                 <div style={{ display: 'flex', gap: '12px' }}>
-                   <button onClick={() => setConfirmLogout(false)} className="btn-cuida btn-secondary" style={{ flex: 1 }}>Cancelar</button>
-                   <button onClick={logoutAccount} className="btn-cuida btn-primary" style={{ flex: 1, backgroundColor: 'var(--danger)' }}>Confirmar Sair</button>
+               <div className="text-center">
+                 <p className="font-bold text-danger mb-4">Irá eliminar todas as suas configurações deste dispositivo. Continuar?</p>
+                 <div className="flex gap-3">
+                   <button onClick={() => setConfirmLogout(false)} className="btn-cuida btn-secondary flex-1">Cancelar</button>
+                   <button onClick={logoutAccount} className="btn-cuida btn-primary flex-1 bg-danger">Confirmar Sair</button>
                  </div>
                </div>
              ) : (
-               <button onClick={() => setConfirmLogout(true)} className="btn-cuida btn-secondary" style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}>Eliminar Conta Deste Dispositivo</button>
+               <button onClick={() => setConfirmLogout(true)} className="btn-cuida btn-secondary text-danger border-danger">Eliminar Conta Deste Dispositivo</button>
              )}
           </div>
         </div>
