@@ -9,13 +9,12 @@ import {
 
 // --- CONEXÃO REAL COM O SUPABASE ---
 import { createClient } from '@supabase/supabase-js';
+// Temporarily hardcode Supabase credentials to avoid broken deploy while environment variables are fixed.
+// WARNING: Hardcoding credentials is insecure — remove this as soon as Vercel env vars work.
+const supabaseUrl = 'https://vaszaiekhclhcjimzecu.supabase.co';
+const supabaseAnonKey = 'SUA_CHAVE_LONGA_QUE_COMECA_COM_eyJhbGciOi';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder';
-
-if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-  console.warn("Chaves do Supabase em falta! Certifique-se de configurar o seu ficheiro .env");
-}
+console.warn('Supabase client using hardcoded credentials — remove after deploy fix.');
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
