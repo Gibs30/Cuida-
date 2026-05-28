@@ -20,7 +20,7 @@ if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KE
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function App() {
-  // --- ESTADOS DO USUÁRIO ---
+  // --- ESTADOS DO USUÁRIOO ---
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState({ 
     name: '', phone: '', easyMode: false, theme: 'blue', 
