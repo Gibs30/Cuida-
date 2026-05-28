@@ -18,74 +18,6 @@ console.warn('Supabase client using hardcoded credentials — remove after deplo
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-function Sidebar({ currentView, setCurrentView, profile, user }) {
-  const navItems = profile.role === 'monitor' 
-    ? [
-        { id: 'home', label: 'Dashboard', icon: <Activity size={20} /> },
-        { id: 'schedule', label: 'Horários', icon: <Calendar size={20} /> },
-        { id: 'chat', label: 'Chat', icon: <MessageCircle size={20} /> },
-        { id: 'settings', label: 'Ajustes', icon: <Settings size={20} /> },
-      ]
-    : [
-        { id: 'home', label: 'Início', icon: <Heart size={20} /> },
-        { id: 'add', label: 'Novo Aviso', icon: <Plus size={20} /> },
-        { id: 'schedule', label: 'Horários', icon: <Calendar size={20} /> },
-        { id: 'family', label: 'Histórico', icon: <ClipboardList size={20} /> },
-        { id: 'aiAssistant', label: 'IA Saúde', icon: <Sparkles size={20} /> },
-        { id: 'chat', label: 'Mensagens', icon: <MessageCircle size={20} /> },
-        { id: 'settings', label: 'Ajustes', icon: <Settings size={20} /> },
-      ];
-
-  return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-slate-900 text-white p-6 flex flex-col shadow-2xl overflow-y-auto">
-      {/* Logo/Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center">
-            <Heart size={24} className="text-white" />
-          </div>
-          <div>
-            <h1 className="font-bold text-lg text-white">Cuida+</h1>
-            <p className="text-xs text-slate-400">Saúde</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation Items */}
-      <nav className="flex-1 space-y-1">
-        {navItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setCurrentView(item.id)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
-              currentView === item.id
-                ? 'bg-indigo-600 text-white shadow-lg'
-                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-            }`}
-          >
-            {item.icon}
-            <span>{item.label}</span>
-          </button>
-        ))}
-      </nav>
-
-      {/* User Profile Footer */}
-      <div className="border-t border-slate-700 pt-4">
-        <button
-          onClick={() => setCurrentView('editProfile')}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
-        >
-          <User size={20} />
-          <div className="text-left text-sm">
-            <p className="font-medium text-white">{profile.name || 'Utilizador'}</p>
-            <p className="text-xs text-slate-400">{profile.role === 'monitor' ? 'Cuidador' : 'Paciente'}</p>
-          </div>
-        </button>
-      </div>
-    </aside>
-  );
-}
-
 export default function App() {
   // --- ESTADOS DO USUÁRIOO ---
   const [user, setUser] = useState(null);
@@ -121,7 +53,6 @@ export default function App() {
   const [newRemDetail, setNewRemDetail] = useState('');
   const [newRemTime, setNewRemTime] = useState('');
   const [newRemType, setNewRemType] = useState('Pill');
-  const [newRemIcon, setNewRemIcon] = useState('Pill');
   const [newRemDays, setNewRemDays] = useState([]); 
   const [newRemStock, setNewRemStock] = useState(''); 
   const [genericSuggestions, setGenericSuggestions] = useState(''); 
@@ -165,7 +96,15 @@ export default function App() {
 
   const iconMap = { Pill, Calendar, ShoppingCart, Droplets, Clock, Brain };
   const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-
+// --- FUNÇÃO DO MODO FÁCIL: LEITURA DE ECRÃ ---
+  const falarTexto = (texto) => {
+    if (profile.easyMode) { // Usa o seu estado real 'profile.easyMode'
+      window.speechSynthesis.cancel(); // Para o áudio anterior para não encavalar
+      const utterance = new SpeechSynthesisUtterance(texto);
+      utterance.lang = 'pt-PT'; // Define o idioma para português
+      window.speechSynthesis.speak(utterance);
+    }
+  };
   // Sincronizar os estilos do HTML baseado nas Variáveis CSS do App.css
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', profile.theme);
@@ -251,7 +190,7 @@ export default function App() {
     } catch (e) { console.log('Áudio não suportado', e); }
   }, [profile.alarmSound]);
 
-  // --- AUTENTICAÇÃO ANÓNIMA SUPABASE (AUTO-LOGIN) ---
+  // --- AUTENTICAÇÃO ANÓNIMA SUPABASE ---
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -274,6 +213,7 @@ export default function App() {
         setUser(session.user);
       } else {
         setUser(null);
+        setCurrentView('loading');
       }
     });
 
@@ -556,7 +496,7 @@ export default function App() {
         title: newRemTitle, 
         detail: newRemDetail, 
         time: newRemTime, 
-        type: newRemIcon, 
+        type: newRemType, 
         days: newRemDays,
         stock: newRemStock ? parseInt(newRemStock) : null
       };
@@ -576,14 +516,14 @@ export default function App() {
 
   const resetForm = () => {
     setNewRemTitle(''); setNewRemDetail(''); setNewRemTime(''); 
-    setNewRemType('Pill'); setNewRemIcon('Pill'); setNewRemDays([]); setEditingId(null);
+    setNewRemType('Pill'); setNewRemDays([]); setEditingId(null);
     setNewRemStock(''); setGenericSuggestions(''); setInteractionWarning('');
     setCurrentView('schedule');
   };
 
   const closeAddReminder = () => {
     setNewRemTitle(''); setNewRemDetail(''); setNewRemTime(''); 
-    setNewRemType('Pill'); setNewRemIcon('Pill'); setNewRemDays([]); setEditingId(null);
+    setNewRemType('Pill'); setNewRemDays([]); setEditingId(null);
     setNewRemStock(''); setGenericSuggestions(''); setInteractionWarning('');
     setCurrentView('home');
   };
@@ -878,110 +818,80 @@ export default function App() {
   // --- ELEMENTOS DE RENDER DO TEMPLATE ---
 
   const renderOnboarding = () => (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-3xl shadow-xl p-8 md:p-12">
-          {/* Logo */}
-          <div className="flex justify-center mb-8">
-            <div className="w-20 h-20 rounded-2xl bg-indigo-600 flex items-center justify-center">
-              <Heart size={48} className="text-white animate-pulse" />
-            </div>
-          </div>
+    <div className="app-container flex items-center justify-center">
+      <div className="card-cuida max-w-md w-full text-center">
+        <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary-light text-primary mb-4">
+          <Heart size={64} className="animate-pulse" />
+        </div>
+        <h1 className="text-4xl font-bold mb-2">Bem-vindo ao Cuida+</h1>
+        <p className="text-text-muted text-lg mb-8">Controle seu tempo ❤️</p>
+        
+        <div className="form-field">
+          <label className="text-left font-bold">Como quer ser chamado?</label>
+          <input 
+            type="text" className="input-cuida" placeholder="Insira o seu nome"
+            value={onboardingName} onChange={e => setOnboardingName(e.target.value)}
+          />
+        </div>
 
-          <h1 className="text-4xl font-bold text-center text-slate-900 mb-2">Bem-vindo ao Cuida+</h1>
-          <p className="text-center text-slate-600 text-lg mb-8">Controle seu tempo ❤️</p>
-
-          <div className="space-y-6">
-            {/* Name Input */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">Como quer ser chamado?</label>
-              <input 
-                type="text" 
-                className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 outline-none transition-all text-lg"
-                placeholder="Insira o seu nome"
-                value={onboardingName} 
-                onChange={e => setOnboardingName(e.target.value)}
-              />
-            </div>
-
-            {/* Role Selection */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">Tipo de Perfil</label>
-              <div className="flex gap-3">
-                <button 
-                  onClick={() => setOnboardingRole('patient')}
-                  className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
-                    onboardingRole === 'patient'
-                      ? 'bg-indigo-600 text-white shadow-lg'
-                      : 'bg-slate-100 text-slate-700 border-2 border-slate-200 hover:border-slate-300'
-                  }`}
-                >
-                  Sou Paciente
-                </button>
-                <button 
-                  onClick={() => setOnboardingRole('monitor')}
-                  className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
-                    onboardingRole === 'monitor'
-                      ? 'bg-indigo-600 text-white shadow-lg'
-                      : 'bg-slate-100 text-slate-700 border-2 border-slate-200 hover:border-slate-300'
-                  }`}
-                >
-                  Sou Cuidador
-                </button>
-              </div>
-            </div>
-
-            {/* Submit Button */}
+        <div className="form-field">
+          <label className="text-left font-bold">Tipo de Perfil</label>
+          <div className="flex gap-3">
             <button 
-              onClick={() => saveProfile(onboardingName, onboardingPhone, onboardingRole)}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-colors shadow-lg mt-4"
+              onClick={() => setOnboardingRole('patient')}
+              className={`scroll-btn flex-1 ${onboardingRole === 'patient' ? 'active' : ''}`}
             >
-              Aceder ao Painel
+              Sou Paciente
+            </button>
+            <button 
+              onClick={() => setOnboardingRole('monitor')}
+              className={`scroll-btn flex-1 ${onboardingRole === 'monitor' ? 'active' : ''}`}
+            >
+              Sou Cuidador
             </button>
           </div>
         </div>
+
+        <button 
+          onClick={() => saveProfile(onboardingName, onboardingPhone, onboardingRole)}
+          className="btn-cuida btn-primary mt-4"
+        >
+          Entrar na conta
+        </button>
       </div>
     </div>
   );
 
   const renderEditProfile = () => (
-    <div className="ml-64 min-h-screen bg-slate-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => setCurrentView('settings')} className="p-2 hover:bg-slate-200 rounded-xl transition-colors">
-            <ArrowLeft size={24} className="text-slate-700" />
-          </button>
-          <h1 className="text-3xl font-bold text-slate-900">O Meu Perfil</h1>
+    <div className="app-container">
+      <div className="max-width-wrapper">
+        <div className="flex-between" style={{ marginBottom: '32px' }}>
+          <div className="flex-gap">
+            <button onClick={() => setCurrentView('settings')} className="scroll-btn" style={{ padding: '12px' }}><ArrowLeft size={24} /></button>
+            <h1>O Meu Perfil</h1>
+          </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 md:p-12 max-w-2xl">
-          {/* Name Field */}
-          <div className="mb-8">
-            <label className="block text-sm font-semibold text-slate-900 mb-2">Nome Completo / Alcunha</label>
+        <div className="card-cuida" style={{ maxWidth: '600px', margin: '0 auto' }}>
+          <div className="form-field">
+            <label>Nome Completo / Alcunha</label>
             <input 
-              type="text" 
-              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 outline-none transition-all"
-              value={editName} 
-              onChange={e => setEditName(e.target.value)}
+              type="text" className="input-cuida"
+              value={editName} onChange={e => setEditName(e.target.value)}
             />
           </div>
 
-          {/* Phone Field */}
-          <div className="mb-8">
-            <label className="block text-sm font-semibold text-slate-900 mb-2">Telemóvel (opcional)</label>
+          <div className="form-field">
+            <label>Telemóvel (opcional)</label>
             <input 
-              type="tel" 
-              className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 outline-none transition-all"
-              value={editPhone} 
-              onChange={e => setEditPhone(e.target.value)}
+              type="tel" className="input-cuida"
+              value={editPhone} onChange={e => setEditPhone(e.target.value)}
             />
           </div>
 
-          {/* Save Button */}
           <button 
             onClick={() => { updateProfile({ name: editName, phone: editPhone }); showToast("Perfil atualizado!"); setCurrentView('settings'); }}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2"
+            className="btn-cuida btn-primary"
           >
             <Check size={20} /> Guardar Perfil
           </button>
@@ -991,14 +901,14 @@ export default function App() {
   );
 
   const renderPatientHome = () => (
-    <div className="ml-64 min-h-screen bg-slate-50 p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="app-container">
+      <div className="max-width-wrapper">
         
-        {/* Header with Easy Mode Toggle */}
-        <div className="flex items-end justify-between">
+        {/* Cabeçalho */}
+        <div className="flex-between mb-8">
           <div>
-            <h1 className="text-5xl font-bold text-slate-900 mb-2">Olá, {profile.name} 🌷</h1>
-            <p className="text-lg text-slate-600">O que vamos fazer hoje?</p>
+            <h1 className="text-5xl font-bold mb-1">Olá, {profile.name} 🌷</h1>
+            <p className="text-text-muted text-lg">O que vamos fazer hoje?</p>
           </div>
           
           <button 
@@ -1007,89 +917,66 @@ export default function App() {
               updateProfile({ easyMode: newMode });
               speak(newMode ? "Modo fácil ativado." : "Modo fácil desativado.");
             }}
-            className={`p-3 rounded-2xl font-medium transition-all shadow-sm ${
-              profile.easyMode 
-                ? 'bg-indigo-600 text-white shadow-lg' 
-                : 'bg-white text-slate-700 border-2 border-slate-200 hover:border-slate-300'
-            }`}
+            className={`scroll-btn p-4 ${profile.easyMode ? 'active' : ''}`}
           >
             <Volume2 size={24} />
           </button>
         </div>
 
-        {/* Streak Card */}
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl p-6 flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-orange-200 flex items-center justify-center">
-            <Flame size={32} className="text-orange-600" />
-          </div>
+        {/* Streak */}
+        <div className="status-banner orange">
+          <Flame size={36} />
           <div>
-            <p className="text-sm font-semibold text-slate-600">SEQUÊNCIA ATUAL</p>
-            <h2 className="text-3xl font-bold text-slate-900">{streakDays} dias seguidos</h2>
-            <p className="text-slate-600">Estás a ir muito bem! Mantém o ritmo diário.</p>
+            <strong className="text-lg block">Dias Seguidos: {streakDays}</strong>
+            <span>Estás a ir muito bem! Mantém o ritmo diário.</span>
           </div>
         </div>
 
-        {/* Quick Action Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <button 
-            onClick={() => { setEditingId(null); setCurrentView('add'); }} 
-            className="bg-white rounded-2xl p-6 border-2 border-slate-200 hover:border-indigo-500 hover:shadow-lg transition-all text-center"
-          >
-            <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center mx-auto mb-3">
-              <Plus size={24} className="text-indigo-600" />
-            </div>
-            <p className="font-bold text-slate-900">Novo Aviso</p>
+        {/* Menu Grid */}
+        <div className="grid-cards">
+          <button onClick={() => { setEditingId(null); setCurrentView('add'); }} className="menu-btn">
+            <div className="menu-btn-icon-wrapper"><Plus size={32} /></div>
+            <span className="font-bold">Novo Aviso</span>
           </button>
 
-          <button 
-            onClick={() => setCurrentView('schedule')} 
-            className="bg-white rounded-2xl p-6 border-2 border-slate-200 hover:border-indigo-500 hover:shadow-lg transition-all text-center"
-          >
-            <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center mx-auto mb-3">
-              <Calendar size={24} className="text-green-600" />
-            </div>
-            <p className="font-bold text-slate-900">Horários</p>
+          <button onClick={() => setCurrentView('schedule')} className="menu-btn">
+            <div className="menu-btn-icon-wrapper"><ClipboardList size={32} /></div>
+            <span className="font-bold">Meus Horários</span>
           </button>
 
-          <button 
-            onClick={() => setCurrentView('family')} 
-            className="bg-white rounded-2xl p-6 border-2 border-slate-200 hover:border-indigo-500 hover:shadow-lg transition-all text-center"
-          >
-            <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center mx-auto mb-3">
-              <ClipboardList size={24} className="text-purple-600" />
-            </div>
-            <p className="font-bold text-slate-900">Histórico</p>
+          <button onClick={() => setCurrentView('family')} className="menu-btn">
+            <div className="menu-btn-icon-wrapper"><Users size={32} /></div>
+            <span className="font-bold">Família & Histórico</span>
           </button>
 
-          <button 
-            onClick={() => setCurrentView('settings')} 
-            className="bg-white rounded-2xl p-6 border-2 border-slate-200 hover:border-indigo-500 hover:shadow-lg transition-all text-center"
-          >
-            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mx-auto mb-3">
-              <Settings size={24} className="text-slate-600" />
-            </div>
-            <p className="font-bold text-slate-900">Ajustes</p>
+          <button onClick={() => setCurrentView('settings')} className="menu-btn">
+            <div className="menu-btn-icon-wrapper"><Settings size={32} /></div>
+            <span className="font-bold">Ajustes</span>
           </button>
         </div>
 
-        {/* AI & Chat Widgets */}
-        <div className="grid lg:grid-cols-2 gap-6">
+        {/* Widgets IA & Chat */}
+        <div className="grid-two-columns">
           <button 
             onClick={() => setCurrentView('aiAssistant')}
-            className="bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl p-8 text-white text-left hover:shadow-xl transition-shadow"
+            className="btn-cuida bg-gradient-to-r from-purple to-indigo-500 text-white p-8 text-left justify-start"
           >
-            <Sparkles size={32} className="mb-3" />
-            <h3 className="text-2xl font-bold mb-1">Assistente de Saúde ✨</h3>
-            <p className="text-purple-100">Dicas de organização, remédios e saúde geral.</p>
+            <Sparkles size={36} />
+            <div>
+              <strong className="text-xl block">Assistente de Saúde ✨</strong>
+              <span className="opacity-90 font-normal">Dicas de organização, remédios e saúde geral.</span>
+            </div>
           </button>
 
           <button 
             onClick={() => setCurrentView('chat')}
-            className="bg-white rounded-2xl p-8 text-left border-2 border-slate-200 hover:border-indigo-500 hover:shadow-lg transition-all"
+            className="btn-cuida btn-secondary p-8 text-left justify-start border-2 border-gray-300"
           >
-            <MessageCircle size={32} className="text-indigo-600 mb-3" />
-            <h3 className="text-2xl font-bold text-slate-900 mb-1">Mensagens 💬</h3>
-            <p className="text-slate-600">Conversar com o familiar cuidador.</p>
+            <MessageCircle size={36} className="text-primary" />
+            <div>
+              <strong className="text-xl block">Mensagens 💬</strong>
+              <span className="text-text-muted font-normal">Conversar com o familiar cuidador.</span>
+            </div>
           </button>
         </div>
 
@@ -1100,28 +987,19 @@ export default function App() {
   const renderMonitorHome = () => {
     if (!profile.linkedPatientId) {
       return (
-        <div className="ml-64 min-h-screen bg-slate-50 p-8 flex items-center justify-center">
-          <div className="max-w-2xl w-full text-center">
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12">
-              <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-6">
-                <Users size={40} className="text-slate-400" />
-              </div>
-              <h1 className="text-3xl font-bold text-slate-900 mb-4">Nenhum Paciente Vinculado</h1>
-              <p className="text-slate-600 text-lg mb-8">
-                Introduza o código UID partilhado pelo paciente para aceder à monitorização em tempo real.
-              </p>
-              <div className="flex gap-3">
-                <input 
-                  type="text" 
-                  className="flex-1 px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 outline-none"
-                  placeholder="Código de 36 caracteres..."
-                  value={inviteInput} 
-                  onChange={e => setInviteInput(e.target.value)}
-                />
-                <button onClick={acceptInvite} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8 py-3 rounded-xl transition-colors">
-                  Vincular
-                </button>
-              </div>
+        <div className="app-container">
+          <div className="max-width-wrapper" style={{ textAlign: 'center', padding: '40px 0' }}>
+            <Users size={80} style={{ color: 'var(--text-muted)', marginBottom: '24px' }} />
+            <h1 style={{ marginBottom: '16px' }}>Nenhum Paciente Vinculado</h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', marginBottom: '32px' }}>
+              Introduza o código UID partilhado pelo paciente para aceder à monitorização em tempo real.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', maxWidth: '500px', margin: '0 auto' }}>
+              <input 
+                type="text" className="input-cuida" placeholder="Código de 36 caracteres..."
+                value={inviteInput} onChange={e => setInviteInput(e.target.value)}
+              />
+              <button onClick={acceptInvite} className="btn-cuida btn-primary" style={{ width: 'auto' }}>Vincular</button>
             </div>
           </div>
         </div>
@@ -1134,94 +1012,74 @@ export default function App() {
     const progressPerc = todayReminders.length > 0 ? Math.round((todayLogs.length / todayReminders.length) * 100) : 100;
 
     return (
-      <div className="ml-64 min-h-screen bg-slate-50 p-8">
-        <div className="max-w-6xl mx-auto space-y-8">
+      <div className="app-container">
+        <div className="max-width-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
-          {/* Inactivity Alert */}
+          {/* Alerta de Falta de Movimento */}
           {isPatientInactive && (
-            <div className="bg-red-50 border-2 border-red-300 rounded-2xl p-6 flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-red-200 flex items-center justify-center flex-shrink-0">
-                <AlertTriangle size={24} className="text-red-600" />
+            <div className="status-banner red-alert">
+              <AlertTriangle size={40} />
+              <div style={{ flex: 1 }}>
+                <strong style={{ fontSize: '1.3rem', display: 'block' }}>ALERTA: Falta de Movimento!</strong>
+                <span>O paciente não interage com o aplicativo há mais de {profile.lackOfMovementHours} horas.</span>
               </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-red-900">ALERTA: Falta de Movimento</h3>
-                <p className="text-red-700 mt-1">O paciente não interage com o aplicativo há mais de {profile.lackOfMovementHours} horas.</p>
-              </div>
-              <button onClick={() => showToast("A telefonar...")} className="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-2 rounded-xl transition-colors flex items-center gap-2 flex-shrink-0">
-                <Phone size={18} /> Ligar
-              </button>
+              <button onClick={() => showToast("A telefonar...")} className="btn-cuida btn-primary" style={{ width: 'auto', backgroundColor: 'white', color: 'var(--danger-text)' }}><Phone size={20} /> Ligar</button>
             </div>
           )}
 
-          {/* Header */}
-          <div>
-            <h1 className="text-4xl font-bold text-slate-900 mb-2">Painel de Monitorização 🩺</h1>
-            <p className="text-slate-600">Paciente vinculado: <span className="font-semibold text-slate-900">{profile.linkedPatientId}</span></p>
+          <div className="flex-between">
+            <div>
+              <h1>Painel de Monitorização 🩺</h1>
+              <p style={{ color: 'var(--text-muted)' }}>Paciente vinculado: <span style={{ fontWeight: 'bold' }}>{profile.linkedPatientId}</span></p>
+            </div>
+            <button onClick={() => updateProfile({ linkedPatientId: '' })} className="scroll-btn" style={{ color: 'var(--danger)' }}>Desvincular</button>
           </div>
 
-          {/* Main Grid */}
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* Daily Progress Card */}
-            <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-              <h2 className="text-2xl font-bold text-slate-900 mb-6">Progresso Diário do Paciente</h2>
+          <div className="grid-two-columns">
+            <div className="card-cuida">
+              <h2 style={{ marginBottom: '16px' }}>Progresso Diário do Paciente</h2>
               
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-semibold text-slate-700">{todayLogs.length} de {todayReminders.length} tarefas concluídas</span>
-                  <span className="text-2xl font-bold text-indigo-600">{progressPerc}%</span>
+              {/* Gráfico de Progresso em CSS Puro */}
+              <div style={{ marginBottom: '24px' }}>
+                <div className="flex-between" style={{ marginBottom: '8px' }}>
+                  <span style={{ fontWeight: 'bold' }}>{todayLogs.length} de {todayReminders.length} tomados</span>
+                  <span style={{ fontWeight: 'bold', color: 'var(--primary)' }}>{progressPerc}%</span>
                 </div>
-                <div className="w-full h-4 bg-slate-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 transition-all duration-500"
-                    style={{ width: `${Math.min(progressPerc, 100)}%` }}
-                  />
+                <div style={{ width: '100%', height: '14px', backgroundColor: 'var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
+                  <div style={{ width: `${Math.min(progressPerc, 100)}%`, height: '100%', backgroundColor: 'var(--primary)', transition: 'width 0.8s ease' }}></div>
                 </div>
               </div>
 
-              <div>
-                <h3 className="font-bold text-slate-900 mb-4">Atividades nas últimas 24h</h3>
-                <div className="space-y-3">
-                  {todayLogs.length === 0 ? (
-                    <p className="text-slate-500 py-4">Nenhuma atividade registada hoje.</p>
-                  ) : (
-                    todayLogs.map(log => (
-                      <div key={log.id} className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-xl">
-                        <span className="text-slate-700">{log.title}</span>
-                        <div className="flex items-center gap-2 text-green-700 font-semibold">
-                          <Check size={18} /> Concluído
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
+              <h3>Logs das últimas 24h</h3>
+              <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {todayLogs.length === 0 ? <p style={{ color: 'var(--text-muted)' }}>Nenhuma atividade hoje.</p> : todayLogs.map(log => (
+                  <div key={log.id} className="flex-between" style={{ padding: '12px', borderRadius: 'var(--radius)', backgroundColor: 'var(--success-light)', color: 'var(--success-text)' }}>
+                    <span>{log.title}</span>
+                    <strong className="flex-gap"><Check size={18} /> Concluído</strong>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* Sidebar Actions */}
-            <div className="space-y-4">
-              {/* Inactivity Detector */}
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <h3 className="font-bold text-slate-900 mb-4">⏰ Detetor de Inatividade</h3>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-slate-700">Ativar Alerta</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              
+              {/* Configurador de Inatividade */}
+              <div className="card-cuida">
+                <h3>⏰ Detetor de Falta de Movimento</h3>
+                <div className="flex-between" style={{ margin: '16px 0' }}>
+                  <span>Ativar Alerta</span>
                   <input 
-                    type="checkbox" 
-                    checked={profile.checkLackOfMovement}
+                    type="checkbox" checked={profile.checkLackOfMovement} style={{ width: '24px', height: '24px' }}
                     onChange={e => updateProfile({ checkLackOfMovement: e.target.checked })}
-                    className="w-6 h-6 rounded accent-indigo-600 cursor-pointer"
                   />
                 </div>
                 {profile.checkLackOfMovement && (
-                  <div className="flex gap-2 flex-wrap">
+                  <div style={{ display: 'flex', gap: '8px' }}>
                     {[4, 8, 12, 24].map(hr => (
                       <button 
-                        key={hr} 
-                        onClick={() => updateProfile({ lackOfMovementHours: hr })}
-                        className={`flex-1 px-3 py-2 rounded-lg font-semibold transition-all ${
-                          profile.lackOfMovementHours === hr
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                        }`}
+                        key={hr} onClick={() => updateProfile({ lackOfMovementHours: hr })}
+                        className={`scroll-btn ${profile.lackOfMovementHours === hr ? 'active' : ''}`}
+                        style={{ flex: 1 }}
                       >
                         {hr}h
                       </button>
@@ -1230,43 +1088,13 @@ export default function App() {
                 )}
               </div>
 
-              {/* Action Buttons */}
-              <button 
-                onClick={() => { setEditingId(null); setCurrentView('add'); }} 
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
-              >
-                <Plus size={20} /> Adicionar Lembrete
-              </button>
-
-              <button 
-                onClick={() => setCurrentView('chat')} 
-                className="w-full bg-white border-2 border-slate-200 hover:border-indigo-500 text-slate-900 font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
-              >
-                <MessageCircle size={20} /> Chat com Paciente
-              </button>
-
-              <button 
-                onClick={() => setCurrentView('schedule')} 
-                className="w-full bg-white border-2 border-slate-200 hover:border-indigo-500 text-slate-900 font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
-              >
-                <Calendar size={20} /> Horários
-              </button>
-
-              <button 
-                onClick={() => setCurrentView('settings')} 
-                className="w-full bg-white border-2 border-slate-200 hover:border-indigo-500 text-slate-900 font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
-              >
-                <Settings size={20} /> Definições
-              </button>
-
-              <button 
-                onClick={() => updateProfile({ linkedPatientId: '' })} 
-                className="w-full bg-red-50 hover:bg-red-100 text-red-700 font-bold py-3 rounded-xl transition-colors"
-              >
-                Desvincular Paciente
-              </button>
+              <button onClick={() => { setEditingId(null); setCurrentView('add'); }} className="btn-cuida btn-primary"><Plus size={24} /> Adicionar Lembrete</button>
+              <button onClick={() => setCurrentView('chat')} className="btn-cuida btn-secondary"><MessageCircle size={24} /> Chat com o Paciente</button>
+              <button onClick={() => setCurrentView('schedule')} className="btn-cuida btn-secondary"><ClipboardList size={24} /> Listar Horários</button>
+              <button onClick={() => setCurrentView('settings')} className="btn-cuida btn-secondary"><Settings size={24} /> Definições</button>
             </div>
           </div>
+
         </div>
       </div>
     );
@@ -1284,136 +1112,87 @@ export default function App() {
     };
 
     return (
-      <div className="ml-64 min-h-screen bg-slate-50 p-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-8">
-            <button onClick={closeAddReminder} className="p-2 hover:bg-slate-200 rounded-xl transition-colors">
-              <ArrowLeft size={24} className="text-slate-700" />
-            </button>
-            <h1 className="text-3xl font-bold text-slate-900">{editingId ? 'Editar Aviso' : 'Novo Lembrete'}</h1>
+      <div className="app-container">
+        <div className="max-width-wrapper">
+          <div className="flex-gap mb-8">
+            <button onClick={closeAddReminder} className="scroll-btn p-3"><ArrowLeft size={24} /></button>
+            <h1 className="text-3xl font-bold">{editingId ? 'Editar Aviso' : 'Novo Lembrete'}</h1>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 space-y-6">
+          <div className="card-cuida flex flex-col gap-5">
             
-            {/* Title with Camera */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">O que é?</label>
+            <div className="form-field">
+              <label className="font-bold">O que é?</label>
               <div className="flex gap-3">
                 <input 
-                  type="text" 
-                  className="flex-1 px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 outline-none text-lg"
-                  placeholder={placeholderTexts[newRemIcon]}
-                  value={newRemTitle} 
-                  onChange={e => setNewRemTitle(e.target.value)}
+                  type="text" className="input-cuida flex-1" placeholder={placeholderTexts[newRemType]}
+                  value={newRemTitle} onChange={e => setNewRemTitle(e.target.value)}
                   onBlur={() => handleMedicationInputBlur(newRemTitle)}
                 />
-                <label className="flex items-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 rounded-xl font-semibold text-slate-700 cursor-pointer transition-colors">
-                  {isAnalyzingImage ? <Loader2 className="animate-spin text-purple-600" size={24} /> : <Camera size={24} />}
+                <label className="scroll-btn flex items-center gap-2 cursor-pointer">
+                  {isAnalyzingImage ? <Loader2 className="animate-spin text-purple" size={24} /> : <Camera size={24} />}
                   <span>Foto</span>
                   <input type="file" accept="image/*" capture="environment" className="hidden" onChange={recognizeMedicationFromImage} />
                 </label>
               </div>
             </div>
 
-            {/* Icon Selector */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-3">Escolher Ícone</label>
-              <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-                {['Pill', 'Calendar', 'ShoppingCart', 'Droplets', 'Clock', 'Brain'].map(icon => {
-                  const Icon = iconMap[icon];
-                  return (
-                    <button
-                      key={icon}
-                      onClick={() => setNewRemIcon(icon)}
-                      className={`flex flex-col items-center justify-center p-4 rounded-xl transition-all border-2 ${
-                        newRemIcon === icon
-                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg'
-                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-indigo-300'
-                      }`}
-                      title={icon}
-                    >
-                      <Icon size={28} />
-                      <span className="text-xs mt-2 font-semibold">{icon}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Drug Interaction Warning */}
-            {newRemIcon === 'Pill' && (isCheckingInteractions || interactionWarning) && (
-              <div className="bg-red-50 border-2 border-red-300 rounded-xl p-4 flex gap-3">
-                <AlertTriangle size={24} className="text-red-600 flex-shrink-0 mt-0.5" />
+            {/* Alerta IA de Conflito de Fármacos */}
+            {newRemType === 'Pill' && (isCheckingInteractions || interactionWarning) && (
+              <div className="status-banner red-alert m-0">
+                <AlertTriangle size={32} />
                 <div>
-                  <p className="font-semibold text-red-900">Risco detetado pela IA!</p>
-                  <p className="text-red-700 text-sm mt-1">{isCheckingInteractions ? 'A examinar contraindicações...' : interactionWarning}</p>
+                  <strong className="block">Risco detetado pela IA!</strong>
+                  <span>{isCheckingInteractions ? 'A examinar contraindicações...' : interactionWarning}</span>
                 </div>
               </div>
             )}
 
-            {/* Generic Suggestions */}
-            {newRemIcon === 'Pill' && (aiLoading || genericSuggestions) && (
-              <div className="bg-purple-50 border-2 border-purple-300 rounded-xl p-4 flex gap-3">
-                <Sparkles size={24} className="text-purple-600 flex-shrink-0 mt-0.5" />
+            {newRemType === 'Pill' && (aiLoading || genericSuggestions) && (
+              <div className="status-banner bg-purple-light border-2 border-purple text-purple-text m-0">
+                <Sparkles size={32} />
                 <div>
-                  <p className="font-semibold text-purple-900">Opções Genéricas (IA)</p>
-                  <p className="text-purple-700 text-sm mt-1">{aiLoading ? 'A pesquisar base de dados...' : genericSuggestions}</p>
+                  <strong className="block">Opções Genéricas (IA)</strong>
+                  <span>{aiLoading ? 'A pesquisar base de dados...' : genericSuggestions}</span>
                 </div>
               </div>
             )}
 
-            {/* Instruction & Stock */}
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-slate-900 mb-2">Instrução (opcional)</label>
+            <div className="flex gap-4 flex-wrap">
+              <div className="form-field flex-1">
+                <label className="font-bold">Instrução (opcional)</label>
                 <input 
-                  type="text" 
-                  className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 outline-none"
-                  placeholder="Ex: Tomar após a refeição"
-                  value={newRemDetail} 
-                  onChange={e => setNewRemDetail(e.target.value)}
+                  type="text" className="input-cuida" placeholder="Ex: Tomar após a refeição"
+                  value={newRemDetail} onChange={e => setNewRemDetail(e.target.value)}
                 />
               </div>
 
-              {newRemIcon === 'Pill' && (
-                <div>
-                  <label className="block text-sm font-semibold text-slate-900 mb-2">Em Stock</label>
+              {newRemType === 'Pill' && (
+                <div className="form-field w-40">
+                  <label className="font-bold">Em Stock</label>
                   <input 
-                    type="number" 
-                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 outline-none"
-                    placeholder="30"
-                    value={newRemStock} 
-                    onChange={e => setNewRemStock(e.target.value)}
+                    type="number" className="input-cuida" placeholder="30"
+                    value={newRemStock} onChange={e => setNewRemStock(e.target.value)}
                   />
                 </div>
               )}
             </div>
 
-            {/* Time */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">Horário</label>
+            <div className="form-field">
+              <label className="font-bold">Horário</label>
               <input 
-                type="time" 
-                className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 outline-none text-center text-2xl font-bold"
-                value={newRemTime} 
-                onChange={e => setNewRemTime(e.target.value)}
+                type="time" className="input-cuida text-center text-2xl font-bold"
+                value={newRemTime} onChange={e => setNewRemTime(e.target.value)}
               />
             </div>
 
-            {/* Days Selection */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-3">Dias da Semana (Vazio = Diário)</label>
-              <div className="flex gap-2 overflow-x-auto pb-2">
+            <div className="form-field">
+              <label>Dias da Semana (Vazio = Diário)</label>
+              <div className="scroll-row">
                 {diasSemana.map((dia, idx) => (
                   <button 
-                    key={dia} 
-                    onClick={() => toggleDay(idx)}
-                    className={`px-4 py-2 rounded-xl font-semibold transition-all whitespace-nowrap ${
-                      newRemDays.includes(idx)
-                        ? 'bg-indigo-600 text-white shadow-md'
-                        : 'bg-slate-100 text-slate-700 border-2 border-slate-200 hover:border-slate-300'
-                    }`}
+                    key={dia} onClick={() => toggleDay(idx)}
+                    className={`scroll-btn ${newRemDays.includes(idx) ? 'active' : ''}`}
                   >
                     {dia}
                   </button>
@@ -1421,12 +1200,8 @@ export default function App() {
               </div>
             </div>
 
-            {/* Save Button */}
-            <button 
-              onClick={saveReminder} 
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2 mt-8"
-            >
-              <Check size={22} /> Guardar Lembrete
+            <button onClick={saveReminder} className="btn-cuida btn-primary" style={{ marginTop: '24px' }}>
+              <Check size={24} /> Guardar Lembrete
             </button>
 
           </div>
@@ -1438,57 +1213,28 @@ export default function App() {
   const renderSchedule = () => {
     const list = (profile.role === 'monitor' && profile.linkedPatientId) ? patientReminders : reminders;
     return (
-      <div className="ml-64 min-h-screen bg-slate-50 p-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-8">
-            <button onClick={() => setCurrentView('home')} className="p-2 hover:bg-slate-200 rounded-xl transition-colors">
-              <ArrowLeft size={24} className="text-slate-700" />
-            </button>
-            <h1 className="text-3xl font-bold text-slate-900">Horários Agendados</h1>
+      <div className="app-container">
+        <div className="max-width-wrapper">
+          <div className="flex-gap" style={{ marginBottom: '32px' }}>
+            <button onClick={() => setCurrentView('home')} className="scroll-btn" style={{ padding: '12px' }}><ArrowLeft size={24} /></button>
+            <h1>Horários Agendados</h1>
           </div>
 
-          {/* Schedule List */}
-          <div className="space-y-4">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {list.length === 0 ? (
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center">
-                <p className="text-slate-500 text-lg">Nenhum horário registado ainda.</p>
-              </div>
+              <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '40px' }}>Nenhum horário registado.</p>
             ) : (
               list.map(rem => (
-                <div 
-                  key={rem.id} 
-                  className="bg-white rounded-2xl shadow-sm border-l-4 border-l-indigo-600 border border-slate-200 p-6 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-3xl font-bold text-indigo-600">{rem.time}</span>
-                        {rem.stock !== null && rem.stock !== undefined && (
-                          <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
-                            rem.stock <= 5 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
-                          }`}>
-                            Stock: {rem.stock}
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="text-xl font-bold text-slate-900 mb-1">{rem.title}</h3>
-                      {rem.detail && <p className="text-slate-600">{rem.detail}</p>}
-                    </div>
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => openEdit(rem)} 
-                        className="p-3 hover:bg-slate-100 rounded-xl transition-colors"
-                      >
-                        <Edit2 size={20} className="text-slate-600" />
-                      </button>
-                      <button 
-                        onClick={() => deleteReminder(rem.id)} 
-                        className="p-3 hover:bg-red-50 rounded-xl transition-colors"
-                      >
-                        <Trash2 size={20} className="text-red-600" />
-                      </button>
-                    </div>
+                <div key={rem.id} className="card-cuida flex-between" style={{ borderLeft: '8px solid var(--primary)' }}>
+                  <div>
+                    <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--primary)' }}>{rem.time}</span>
+                    <h3 style={{ marginTop: '4px' }}>{rem.title}</h3>
+                    {rem.detail && <p style={{ color: 'var(--text-muted)' }}>{rem.detail}</p>}
+                    {rem.stock !== null && rem.stock !== undefined && <span style={{ fontSize: '0.9rem', color: 'var(--orange-text)' }}>Stock: {rem.stock} restante</span>}
+                  </div>
+                  <div className="flex-gap">
+                    <button onClick={() => openEdit(rem)} className="scroll-btn"><Edit2 size={18} /></button>
+                    <button onClick={() => deleteReminder(rem.id)} className="scroll-btn" style={{ color: 'var(--danger)' }}><Trash2 size={18} /></button>
                   </div>
                 </div>
               ))
@@ -1500,57 +1246,33 @@ export default function App() {
   };
 
   const renderFamily = () => (
-    <div className="ml-64 min-h-screen bg-slate-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => setCurrentView('home')} className="p-2 hover:bg-slate-200 rounded-xl transition-colors">
-            <ArrowLeft size={24} className="text-slate-700" />
-          </button>
-          <h1 className="text-3xl font-bold text-slate-900">Família & Histórico</h1>
+    <div className="app-container">
+      <div className="max-width-wrapper">
+        <div className="flex-gap" style={{ marginBottom: '32px' }}>
+          <button onClick={() => setCurrentView('home')} className="scroll-btn" style={{ padding: '12px' }}><ArrowLeft size={24} /></button>
+          <h1>Família & Histórico</h1>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-3 mb-8 no-print">
-          <button 
-            onClick={shareWhatsApp} 
-            className="flex-1 flex items-center justify-center gap-2 bg-[#25d366] hover:bg-[#20a853] text-white font-bold py-3 rounded-xl transition-colors"
-          >
-            <Share2 size={20} /> Partilhar WhatsApp
-          </button>
-          <button 
-            onClick={() => window.print()} 
-            className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-colors"
-          >
-            <Printer size={20} /> Imprimir PDF
-          </button>
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }} className="no-print">
+          <button onClick={shareWhatsApp} className="btn-cuida btn-secondary" style={{ flex: 1, backgroundColor: '#25d366', color: 'white' }}><Share2 size={20} /> Compartilhar via WhatsApp</button>
+          <button onClick={() => window.print()} className="btn-cuida btn-primary" style={{ flex: 1 }}><Printer size={20} /> Imprimir PDF</button>
         </div>
 
-        {/* History List */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 print-area">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">Últimas Atividades Concluídas</h2>
-          <div className="space-y-4">
-            {logs.length === 0 ? (
-              <p className="text-slate-500 text-center py-8">Nenhum log de atividade ainda.</p>
-            ) : (
-              logs.map(log => {
-                const d = new Date(log.timestamp);
-                return (
-                  <div 
-                    key={log.id} 
-                    className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
-                  >
-                    <div>
-                      <p className="font-semibold text-slate-900">{log.title}</p>
-                      <p className="text-sm text-slate-500">{d.toLocaleDateString()}</p>
-                    </div>
-                    <div className="flex items-center gap-2 text-green-600 font-semibold">
-                      <Check size={20} /> {d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                    </div>
-                  </div>
-                );
-              })
-            )}
+        <div className="card-cuida print-area">
+          <h2 style={{ marginBottom: '16px' }}>Últimas Atividades Concluídas</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {logs.length === 0 ? <p style={{ color: 'var(--text-muted)' }}>Nenhum log de atividade ainda.</p> : logs.map(log => {
+               const d = new Date(log.timestamp);
+               return (
+                 <div key={log.id} className="flex-between" style={{ padding: '16px', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+                   <div>
+                     <strong>{log.title}</strong>
+                     <span style={{ display: 'block', fontSize: '0.9rem', color: 'var(--text-muted)' }}>{d.toLocaleDateString()}</span>
+                   </div>
+                   <strong style={{ color: 'var(--success)', display: 'flex', gap: '8px', alignItems: 'center' }}><Check size={20} /> {d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</strong>
+                 </div>
+               );
+            })}
           </div>
         </div>
       </div>
@@ -1558,173 +1280,101 @@ export default function App() {
   );
 
   const renderChat = () => (
-    <div className="ml-64 min-h-screen bg-slate-50 p-8 flex flex-col">
-      <div className="max-w-4xl mx-auto w-full flex flex-col flex-1">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => setCurrentView('home')} className="p-2 hover:bg-slate-200 rounded-xl transition-colors">
-            <ArrowLeft size={24} className="text-slate-700" />
-          </button>
-          <h1 className="text-3xl font-bold text-slate-900">Chat com Família</h1>
+    <div className="app-container">
+      <div className="max-width-wrapper h-screen flex flex-col">
+        <div className="flex-gap mb-6">
+          <button onClick={() => setCurrentView('home')} className="scroll-btn p-3"><ArrowLeft size={24} /></button>
+          <h1 className="text-3xl font-bold">Chat com Família</h1>
         </div>
 
-        {/* Chat Container */}
-        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6 flex flex-col">
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto mb-4 space-y-4">
-            {chatMessages.length === 0 ? (
-              <p className="text-center text-slate-500 my-auto py-8">Nenhuma mensagem. Comece a conversa!</p>
-            ) : (
-              chatMessages.map(msg => {
-                const isMe = msg.sender_role === profile.role;
-                return (
-                  <div 
-                    key={msg.id} 
-                    className={`flex gap-3 ${isMe ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div className={`max-w-xs ${isMe ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-900'} rounded-2xl px-4 py-3`}>
-                      <p className={`text-xs mb-1 ${isMe ? 'text-indigo-100' : 'text-slate-500'}`}>{msg.sender_name}</p>
-                      <p className="break-words">{msg.text}</p>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
+        <div className="chat-box flex-1">
+          {chatMessages.length === 0 ? (
+             <p className="text-center text-text-muted m-auto">Nenhuma mensagem. Comece a conversa!</p>
+          ) : chatMessages.map(msg => {
+             const isMe = msg.sender_role === profile.role;
+             return (
+               <div key={msg.id} className={`chat-bubble ${isMe ? 'me' : 'other'}`}>
+                 <span className="text-xs block opacity-80 mb-1">{msg.sender_name}</span>
+                 <span>{msg.text}</span>
+               </div>
+             );
+          })}
+        </div>
 
-          {/* Input Area */}
-          <div className="flex gap-3">
-            <button 
-              onClick={() => startListening(setNewChatMessage)} 
-              className="p-3 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
-            >
-              <Mic size={22} className="text-slate-700" />
-            </button>
-            <input 
-              type="text" 
-              className="flex-1 px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 outline-none"
-              placeholder="Escreva uma mensagem..."
-              value={newChatMessage} 
-              onChange={e => setNewChatMessage(e.target.value)}
-              onKeyPress={e => e.key === 'Enter' && sendChatMessage()}
-            />
-            <button 
-              onClick={sendChatMessage} 
-              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors flex items-center gap-2"
-            >
-              <Send size={20} />
-            </button>
-          </div>
+        <div className="flex gap-3">
+          <button onClick={() => startListening(setNewChatMessage)} className="scroll-btn p-4"><Mic size={24} /></button>
+          <input 
+            type="text" className="input-cuida flex-1" placeholder="Escreva uma mensagem..."
+            value={newChatMessage} onChange={e => setNewChatMessage(e.target.value)}
+            onKeyPress={e => e.key === 'Enter' && sendChatMessage()}
+          />
+          <button onClick={sendChatMessage} className="btn-cuida btn-primary w-auto"><Send size={24} /></button>
         </div>
       </div>
     </div>
   );
 
   const renderSettings = () => (
-    <div className="ml-64 min-h-screen bg-slate-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => setCurrentView('home')} className="p-2 hover:bg-slate-200 rounded-xl transition-colors">
-            <ArrowLeft size={24} className="text-slate-700" />
-          </button>
-          <h1 className="text-3xl font-bold text-slate-900">Ajustes do Sistema</h1>
+    <div className="app-container">
+      <div className="max-width-wrapper">
+        <div className="flex-gap mb-8">
+          <button onClick={() => setCurrentView('home')} className="scroll-btn p-3"><ArrowLeft size={24} /></button>
+          <h1 className="text-3xl font-bold">Ajustes do Sistema</h1>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 space-y-8">
-          {/* Edit Profile Button */}
-          <button 
-            onClick={() => setCurrentView('editProfile')} 
-            className="w-full flex items-center gap-3 px-6 py-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl transition-colors border-2 border-indigo-200"
-          >
-            <User size={22} /> Editar Perfil
-          </button>
-
-          {/* Dark Mode */}
-          <div className="border-t border-slate-200 pt-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-slate-900 text-lg">Modo Noturno</h3>
-                <p className="text-slate-600">Cores escuras ideais para a noite.</p>
-              </div>
-              <button 
-                onClick={() => updateProfile({ darkMode: !isDark })} 
-                className={`p-3 rounded-xl font-semibold transition-all flex items-center gap-2 ${
-                  isDark 
-                    ? 'bg-amber-100 text-amber-700' 
-                    : 'bg-slate-100 text-slate-700'
-                }`}
-              >
-                {isDark ? <Sun size={22} /> : <Moon size={22} />}
-                {isDark ? 'Modo Claro' : 'Modo Escuro'}
-              </button>
+        <div className="card-cuida flex flex-col gap-6">
+          <button onClick={() => setCurrentView('editProfile')} className="btn-cuida btn-secondary"><User size={20} /> Editar Perfil</button>
+          
+          <div className="flex-between">
+            <div>
+              <strong>Modo Noturno</strong>
+              <p className="text-text-muted">Cores escuras ideais para a noite.</p>
             </div>
+            <button onClick={() => updateProfile({ darkMode: !isDark })} className="scroll-btn">
+               {isDark ? <Sun size={20} /> : <Moon size={20} />} {isDark ? 'Modo Claro' : 'Modo Escuro'}
+            </button>
           </div>
 
-          {/* Easy Mode */}
-          <div className="border-t border-slate-200 pt-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-slate-900 text-lg">Modo Fácil (Acessibilidade)</h3>
-                <p className="text-slate-600">Ativa leitura de voz e aumenta botões.</p>
-              </div>
-              <input 
-                type="checkbox" 
-                checked={profile.easyMode}
-                onChange={e => updateProfile({ easyMode: e.target.checked })}
-                className="w-6 h-6 rounded accent-indigo-600 cursor-pointer"
-              />
+          <div className="flex-between">
+            <div>
+              <strong>Modo Fácil (Acessibilidade)</strong>
+              <p className="text-text-muted">Ativa leitura de voz e aumenta botões.</p>
             </div>
+            <input 
+              type="checkbox" checked={profile.easyMode} className="w-6 h-6"
+              onChange={e => updateProfile({ easyMode: e.target.checked })}
+            />
           </div>
 
-          {/* Color Theme */}
-          <div className="border-t border-slate-200 pt-8">
-            <h3 className="font-bold text-slate-900 text-lg mb-4">Cor Principal</h3>
-            <div className="flex gap-4">
+          <div className="form-field">
+            <label className="font-bold">Cor Principal</label>
+            <div className="flex gap-3">
               {['blue', 'green', 'purple', 'red'].map(col => (
                 <button 
-                  key={col}
-                  onClick={() => updateProfile({ theme: col })}
-                  className={`w-14 h-14 rounded-full transition-all shadow-md ${
+                  key={col} onClick={() => updateProfile({ theme: col })}
+                  className={`w-12 h-12 rounded-full shadow-md ${
                     col === 'blue' ? 'bg-blue-600' : 
                     col === 'green' ? 'bg-green-600' : 
                     col === 'purple' ? 'bg-purple-600' : 
                     'bg-red-600'
-                  } ${profile.theme === col ? 'ring-4 ring-offset-2 ring-slate-900' : ''}`}
-                  title={col}
+                  } ${profile.theme === col ? 'ring-4 ring-white' : ''}`}
                 />
               ))}
             </div>
           </div>
 
-          {/* Logout Section */}
-          <div className="border-t border-slate-200 pt-8">
-            {confirmLogout ? (
-              <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-6">
-                <p className="font-bold text-red-900 text-center mb-4">Irá eliminar todas as suas configurações deste dispositivo. Continuar?</p>
-                <div className="flex gap-3">
-                  <button 
-                    onClick={() => setConfirmLogout(false)} 
-                    className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold rounded-xl transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button 
-                    onClick={logoutAccount} 
-                    className="flex-1 py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors"
-                  >
-                    Confirmar Sair
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button 
-                onClick={() => setConfirmLogout(true)} 
-                className="w-full py-3 px-4 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded-xl transition-colors border-2 border-red-200"
-              >
-                Eliminar Conta Deste Dispositivo
-              </button>
-            )}
+          <div className="border-t-2 border-gray-200 pt-6">
+             {confirmLogout ? (
+               <div className="text-center">
+                 <p className="font-bold text-danger mb-4">Irá eliminar todas as suas configurações deste dispositivo. Continuar?</p>
+                 <div className="flex gap-3">
+                   <button onClick={() => setConfirmLogout(false)} className="btn-cuida btn-secondary flex-1">Cancelar</button>
+                   <button onClick={logoutAccount} className="btn-cuida btn-primary flex-1 bg-danger">Confirmar Sair</button>
+                 </div>
+               </div>
+             ) : (
+               <button onClick={() => setConfirmLogout(true)} className="btn-cuida btn-secondary text-danger border-danger">Eliminar Conta Deste Dispositivo</button>
+             )}
           </div>
         </div>
       </div>
@@ -1732,174 +1382,108 @@ export default function App() {
   );
 
   const renderAiAssistant = () => (
-    <div className="ml-64 min-h-screen bg-slate-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <button 
-            onClick={() => { setCurrentView('home'); setAiResult(''); }} 
-            className="p-2 hover:bg-slate-200 rounded-xl transition-colors"
-          >
-            <ArrowLeft size={24} className="text-slate-700" />
-          </button>
-          <h1 className="text-3xl font-bold text-slate-900">Assistente de Saúde ✨</h1>
+    <div className="app-container">
+      <div className="max-width-wrapper">
+        <div className="flex-gap" style={{ marginBottom: '32px' }}>
+          <button onClick={() => { setCurrentView('home'); setAiResult(''); }} className="scroll-btn" style={{ padding: '12px' }}><ArrowLeft size={24} /></button>
+          <h1>Assistente de Saúde ✨</h1>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex gap-2 overflow-x-auto mb-8 pb-2">
-          {[
-            { id: 'explain', label: 'Remédios 💊' },
-            { id: 'org', label: 'Organização 🏡' },
-            { id: 'health', label: 'Saúde Geral 🍎' },
-            { id: 'general', label: 'Perguntas 💬' },
-            { id: 'tip', label: 'Dica Diária 💡' }
-          ].map(tab => (
-            <button 
-              key={tab.id}
-              onClick={() => { setAiTab(tab.id); setAiResult(''); }} 
-              className={`px-4 py-2 rounded-xl font-semibold whitespace-nowrap transition-all ${
-                aiTab === tab.id
-                  ? 'bg-indigo-600 text-white shadow-md'
-                  : 'bg-white border-2 border-slate-200 text-slate-700 hover:border-slate-300'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="scroll-row" style={{ marginBottom: '24px' }}>
+          <button onClick={() => { setAiTab('explain'); setAiResult(''); }} className={`scroll-btn ${aiTab === 'explain' ? 'active' : ''}`}>Remédios 💊</button>
+          <button onClick={() => { setAiTab('org'); setAiResult(''); }} className={`scroll-btn ${aiTab === 'org' ? 'active' : ''}`}>Organização 🏡</button>
+          <button onClick={() => { setAiTab('health'); setAiResult(''); }} className={`scroll-btn ${aiTab === 'health' ? 'active' : ''}`}>Saúde Geral 🍎</button>
+          <button onClick={() => { setAiTab('general'); setAiResult(''); }} className={`scroll-btn ${aiTab === 'general' ? 'active' : ''}`}>Perguntas Gerais 💬</button>
+          <button onClick={() => { setAiTab('tip'); setAiResult(''); }} className={`scroll-btn ${aiTab === 'tip' ? 'active' : ''}`}>Dica Diária 💡</button>
         </div>
 
-        {/* Content Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 min-h-96">
+        <div className="card-cuida" style={{ minHeight: '300px' }}>
           {aiTab === 'explain' && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold text-slate-900">Decifrar Medicamento</h2>
-              <input 
-                type="text" 
-                className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 outline-none"
-                placeholder="Ex: Losartana"
-                value={medicationName} 
-                onChange={e => setMedicationName(e.target.value)}
-              />
-              <button 
-                onClick={() => askGeminiWithMode('explain', medicationName)} 
-                disabled={aiLoading} 
-                className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
-              >
-                {aiLoading ? <Loader2 className="animate-spin" size={20} /> : 'Explicar Remédio'}
-              </button>
-            </div>
+             <div className="form-field">
+                <label>Decifrar Medicamento</label>
+                <input 
+                  type="text" className="input-cuida" placeholder="Ex: Losartana"
+                  value={medicationName} onChange={e => setMedicationName(e.target.value)}
+                />
+                <button onClick={() => askGeminiWithMode('explain', medicationName)} disabled={aiLoading} className="btn-cuida btn-primary" style={{ marginTop: '16px' }}>
+                  {aiLoading ? <Loader2 className="animate-spin" /> : 'Explicar Remédio'}
+                </button>
+             </div>
           )}
 
           {aiTab === 'org' && (
-            <div className="text-center">
-              <h2 className="text-xl font-bold text-slate-900 mb-6">Arrumação e Segurança Doméstica</h2>
-              <button 
-                onClick={() => askGeminiWithMode('org')} 
-                disabled={aiLoading}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold py-3 px-8 rounded-xl transition-colors flex items-center justify-center gap-2 mx-auto"
-              >
-                {aiLoading ? <Loader2 className="animate-spin" size={20} /> : 'Sugerir Dica de Organização'}
-              </button>
-            </div>
+             <div style={{ textAlign: 'center' }}>
+                <h3 style={{ marginBottom: '16px' }}>Arrumação e Segurança Doméstica</h3>
+                <button onClick={() => askGeminiWithMode('org')} disabled={aiLoading} className="btn-cuida btn-primary" style={{ width: 'auto' }}>
+                  {aiLoading ? <Loader2 className="animate-spin" /> : 'Sugerir Dica de Organização'}
+                </button>
+             </div>
           )}
 
           {aiTab === 'health' && (
-            <div className="text-center">
-              <h2 className="text-xl font-bold text-slate-900 mb-6">Conselhos Gerais de Saúde</h2>
-              <button 
-                onClick={() => askGeminiWithMode('health')} 
-                disabled={aiLoading}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold py-3 px-8 rounded-xl transition-colors flex items-center justify-center gap-2 mx-auto"
-              >
-                {aiLoading ? <Loader2 className="animate-spin" size={20} /> : 'Ver Conselho Preventivo'}
-              </button>
-            </div>
+             <div style={{ textAlign: 'center' }}>
+                <h3 style={{ marginBottom: '16px' }}>Conselhos Gerais de Saúde</h3>
+                <button onClick={() => askGeminiWithMode('health')} disabled={aiLoading} className="btn-cuida btn-primary" style={{ width: 'auto' }}>
+                  {aiLoading ? <Loader2 className="animate-spin" /> : 'Ver Conselho Preventivo'}
+                </button>
+             </div>
           )}
 
           {aiTab === 'general' && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold text-slate-900">A sua Pergunta à IA</h2>
-              <input 
-                type="text" 
-                className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 outline-none"
-                placeholder="Escreva a sua dúvida..."
-                value={generalQuestion} 
-                onChange={e => setGeneralQuestion(e.target.value)}
-              />
-              <button 
-                onClick={() => askGeminiWithMode('general', generalQuestion)} 
-                disabled={aiLoading}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
-              >
-                {aiLoading ? <Loader2 className="animate-spin" size={20} /> : 'Perguntar'}
-              </button>
-            </div>
+             <div className="form-field">
+                <label>A sua Pergunta à IA</label>
+                <input 
+                  type="text" className="input-cuida" placeholder="Escreva a sua dúvida..."
+                  value={generalQuestion} onChange={e => setGeneralQuestion(e.target.value)}
+                />
+                <button onClick={() => askGeminiWithMode('general', generalQuestion)} disabled={aiLoading} className="btn-cuida btn-primary" style={{ marginTop: '16px' }}>
+                  {aiLoading ? <Loader2 className="animate-spin" /> : 'Perguntar'}
+                </button>
+             </div>
           )}
 
           {aiTab === 'tip' && (
-            <div className="text-center">
-              <h2 className="text-xl font-bold text-slate-900 mb-6">Dica Carinhosa do Dia</h2>
-              <button 
-                onClick={() => askGeminiWithMode('tip')} 
-                disabled={aiLoading}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold py-3 px-8 rounded-xl transition-colors flex items-center justify-center gap-2 mx-auto"
-              >
-                {aiLoading ? <Loader2 className="animate-spin" size={20} /> : 'Gerar Mensagem de Apoio'}
-              </button>
-            </div>
+             <div style={{ textAlign: 'center' }}>
+                <h3 style={{ marginBottom: '16px' }}>Dica Carinhosa do Dia</h3>
+                <button onClick={() => askGeminiWithMode('tip')} disabled={aiLoading} className="btn-cuida btn-primary" style={{ width: 'auto' }}>
+                  {aiLoading ? <Loader2 className="animate-spin" /> : 'Gerar Mensagem de Apoio'}
+                </button>
+             </div>
           )}
 
-          {/* AI Result */}
           {aiResult && (
-            <div className="mt-8 p-6 bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-300 rounded-2xl">
-              <p className="text-lg leading-relaxed text-slate-900">{aiResult}</p>
-            </div>
+             <div style={{ marginTop: '24px', padding: '20px', borderRadius: 'var(--radius)', backgroundColor: 'var(--purple-light)', border: '2px solid var(--purple)', color: 'var(--purple-text)' }}>
+                <p style={{ fontSize: '1.25rem', lineHeight: '1.5' }}>{aiResult}</p>
+             </div>
           )}
         </div>
       </div>
     </div>
   );
 
-  const openEdit = (reminder) => {
-    setEditingId(reminder.id);
-    setNewRemTitle(reminder.title);
-    setNewRemDetail(reminder.detail || '');
-    setNewRemTime(reminder.time);
-    setNewRemType(reminder.type);
-    setNewRemIcon(reminder.type || 'Pill');
-    setNewRemDays(reminder.days || []);
-    setNewRemStock(reminder.stock || '');
-    setCurrentView('add');
-  };
-
   const renderFloatingSOS = () => {
     if (currentView === 'onboarding' || currentView === 'loading' || profile.role !== 'patient') return null;
     return (
-      <button 
-        onClick={() => showToast("A ligar para o S.O.S...")}
-        className="fixed bottom-8 right-8 w-20 h-20 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-2xl animate-pulse hover:animate-none transition-all z-50 border-4 border-red-400"
-        title="Botão de Emergência"
-      >
-        <Phone size={32} />
+      <button onClick={() => showToast("A ligar para o S.O.S...")}
+        className="sos-floating"
+        title="Botão de Emergência">
+        <Phone size={48} />
       </button>
     );
   };
 
+  // Simple in-app toast renderer (fallback). Uses `toastMessage` state set by `showToast()`.
   const renderToast = () => {
     if (!toastMessage) return null;
     return (
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-indigo-600 text-white px-6 py-3 rounded-full shadow-2xl z-50 font-medium">
+      <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--primary)', color: 'white', padding: '10px 16px', borderRadius: 8, boxShadow: '0 6px 18px rgba(0,0,0,0.12)', zIndex: 9999 }}>
         {toastMessage}
       </div>
     );
   };
 
   return (
-    <div className="bg-slate-50 min-h-screen">
-      {/* Sidebar */}
-      {currentView !== 'onboarding' && currentView !== 'loading' && <Sidebar currentView={currentView} setCurrentView={setCurrentView} profile={profile} user={user} />}
-
-      {/* Main Views */}
+    <div className={`app-view-wrapper`}>
       {currentView === 'onboarding' && renderOnboarding()}
       {currentView === 'home' && renderHome()}
       {currentView === 'add' && renderAddReminder()}
@@ -1910,45 +1494,27 @@ export default function App() {
       {currentView === 'aiAssistant' && renderAiAssistant()}
       {currentView === 'chat' && renderChat()}
 
-      {/* Alert Overlay */}
+      {/* Alerta Overlay quando o Remédio Toca */}
       {activeAlert && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-8 md:p-12 text-center animate-slide-up">
-            {/* Icon */}
-            <div className="w-24 h-24 rounded-full bg-indigo-100 flex items-center justify-center mx-auto mb-6">
-              <Pill size={56} className="text-indigo-600" />
+         <div className="alert-overlay">
+            <div className="alert-modal animate-slide-up">
+               <div className="alert-icon-ring"><Pill size={64} /></div>
+               <h1>Atenção, {profile.name}</h1>
+               <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>Chegou a hora do seu compromisso:</p>
+               <div className="alert-highlight-box">
+                  <h2 style={{ fontSize: '2rem' }}>{activeAlert.title}</h2>
+                  {activeAlert.detail && <p style={{ marginTop: '8px' }}>{activeAlert.detail}</p>}
+                  <strong style={{ display: 'block', marginTop: '16px', color: 'var(--primary)', fontSize: '1.4rem' }}>{activeAlert.time}</strong>
+               </div>
+               <div style={{ display: 'flex', gap: '16px' }}>
+                  <button onClick={() => postponeAlert()} className="btn-cuida btn-secondary" style={{ flex: 1 }}>Adiar 10m</button>
+                  <button onClick={() => markAsDone(activeAlert)} className="btn-cuida btn-primary" style={{ flex: 1 }}>Concluir ✅</button>
+               </div>
             </div>
-
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Atenção, {profile.name}</h1>
-            <p className="text-lg text-slate-600 mb-6">Chegou a hora do seu compromisso:</p>
-
-            {/* Highlight Box */}
-            <div className="bg-indigo-50 border-2 border-indigo-300 rounded-2xl p-8 mb-8">
-              <h2 className="text-4xl font-bold text-slate-900 mb-2">{activeAlert.title}</h2>
-              {activeAlert.detail && <p className="text-slate-600 mt-2 text-lg">{activeAlert.detail}</p>}
-              <p className="text-2xl font-bold text-indigo-600 mt-4">{activeAlert.time}</p>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-4">
-              <button 
-                onClick={() => postponeAlert()} 
-                className="flex-1 py-4 px-6 bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold rounded-xl transition-colors text-lg"
-              >
-                Adiar 10m
-              </button>
-              <button 
-                onClick={() => markAsDone(activeAlert)} 
-                className="flex-1 py-4 px-6 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-colors text-lg flex items-center justify-center gap-2"
-              >
-                <Check size={22} /> Concluir
-              </button>
-            </div>
-          </div>
-        </div>
+         </div>
       )}
 
-      {/* Floating SOS Button & Toast */}
+      {/* Widget SOS Flutuante */}
       {renderFloatingSOS()}
       {renderToast()}
     </div>
